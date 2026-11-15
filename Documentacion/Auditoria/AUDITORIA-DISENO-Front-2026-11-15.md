@@ -347,9 +347,49 @@ contenedor `max-w-7xl px-4 md:px-6`. **Controles:** alto mínimo 44 px (`min-h-1
 | # | Decisión | Mi recomendación |
 |---|---|---|
 | D1 | Cómo cargar las fuentes | **Alojarlas en el proyecto** con los paquetes `@fontsource/young-serif` y `@fontsource-variable/figtree` (2 dependencias nuevas). Descartado: Google Fonts por enlace, porque manda la IP de cada visitante a Google (dato personal, Ley 1581) |
-| D2 | Textos de beneficios del Home (#2) | Me dices qué ofrece de verdad PetConnect hoy; si no, propongo 3 basados en lo que ya funciona (adopción en línea, catálogo, datos protegidos) y los apruebas |
+| D2 | Textos de beneficios del Home (#2) | Los 3 textos de §4.5, sacados del análisis y limitados a lo que la web ya hace. "Próximamente: carnet digital" solo si confirmas que está en el plan |
 | D3 | Contacto del pie (#3) | Correo de atención + "Armenia, Quindío"; sin teléfono |
 | D4 | Modales | `<dialog>` nativo (sin librerías nuevas) |
+
+### 4.5 Qué cambia con los documentos de análisis (agregado el 15/11/2026)
+
+Se revisaron cuatro documentos de la fase de análisis (GA1, julio–agosto de 2025): la especificación de requisitos
+(RF, RNF, RIU, RS, RR, RM), las entrevistas a 3 dueños de mascotas, la formulación del proyecto y el informe de
+metodología (SLO). Aquí no se copian nombres ni datos de las personas entrevistadas.
+
+**Lo que dicen los usuarios (entrevistas):**
+
+| Evidencia | Cuántos | Qué significa para el rediseño |
+|---|---|---|
+| Usan sobre todo el **celular** | 3 de 3 | Diseñar y probar primero a 375 px; 1280 px después. Confirma la prioridad de #10, #14 y #24 |
+| **No usan apps** para su mascota hoy (o casi nunca) | 3 de 3 | RNF02 "fácil para usuarios no técnicos": textos simples, botones grandes, nada escondido detrás de íconos sin texto |
+| Esperan seguridad **alta** o "conforme a norma" | 3 de 3 | Mostrar la confianza de forma honesta (verificación por correo, política de datos). Refuerza D1: no mandar la IP de visitantes a Google |
+| Usarían la sección de **adopción** | 2 de 3 | La adopción es un pilar, no el único: el Home debe equilibrar **cuidado + adopción**, no ser solo adopción |
+| Del directorio y la tienda esperan alimento, accesorios, cuidados, veterinarias | 3 de 3 | Las categorías del catálogo deben verse claras y con nombre de persona, no de base de datos |
+
+**Lo que piden los requisitos y la web todavía no tiene:** carné de vacunación (RF03), directorio de servicios (RF06),
+comunidad (RF07), diario de salud (RF08), GPS (RF10) y compra real (RF11). **El rediseño no los muestra ni los promete**
+(mismo criterio del hallazgo #2 y del ítem 3.3): un botón a algo que no existe es un callejón sin salida.
+
+**Ajustes al plan:**
+- **RIU03** pide un menú con íconos por funcionalidad. → En la Fase 1, el Header lleva ícono **y** texto para lo que sí
+  existe (Catálogo, Adopción, Contacto); en el celular, el menú usa la misma pareja ícono + texto.
+- **Textos del Home (D2)**, todos ciertos hoy:
+  1. **Adopción en línea** — "Conoce a cada mascota y envía tu solicitud desde su ficha. Te respondemos al correo de tu cuenta."
+  2. **Lo que necesita, en un catálogo** — "Alimento, accesorios y cuidado para tu mascota, en un solo lugar."
+  3. **Tus datos, protegidos** — "Verificamos tu correo al entrar y tratamos tus datos según la Ley 1581 de 2012."
+  4. *(Opcional, solo si confirmas que está planeado)* "Próximamente: carné digital de vacunación con recordatorios"
+     — fue lo que más gustó en las entrevistas (3 de 3).
+- **Título del Home:** "Todo para tu mascota en un solo lugar" promete más de lo que hay. Propuesta:
+  **"Cuida y adopta, en un solo lugar"**, con dos botones de igual peso: "Ver mascotas en adopción" y "Explorar catálogo".
+
+**Cosas raras en los documentos (para tu evidencia GA, no para el Front):**
+- **RS03** pide cifrar contraseñas con **SHA-256**, pero el proyecto usa **bcrypt** (regla 4 de CLAUDE.md), que es lo
+  correcto: SHA-256 es rápido y por eso fácil de adivinar a fuerza bruta. Conviene corregir el requisito.
+- **RR02** dice que cada módulo carga en "**5 minutos**"; seguramente quiso decir 5 segundos (RNF04 ya pide 2 s por acción).
+- **Formulación de Proyecto de Software** describe una app de **gestión de tareas**, no PetConnect (es la plantilla de ejemplo).
+- **SLO** describe un sistema de inventario y facturación electrónica de una empresa comercial, no PetConnect.
+  Su elección de **Scrum** sí encaja con este plan: cada fase es un incremento que revisas antes de unirlo.
 
 ---
 
@@ -369,8 +409,8 @@ contenedor `max-w-7xl px-4 md:px-6`. **Controles:** alto mínimo 44 px (`min-h-1
 ### Fase 1 — Tokens, Header y Home · rama `rediseno-front-fase-1-home` · 🔴
 - [ ] 1.1 Tokens de §4.3 en `index.css` (+ fuentes según D1) y `min-height: 100dvh` (#13, #35, #36, #44)
 - [ ] 1.2 Base de movimiento: `prefers-reduced-motion`, hover protegido, quitar *ripple* y animaciones sin uso; arreglar `useScrollReveal` (#12, #20, #24, #45, #41 en `animations.css`)
-- [ ] 1.3 Header: colores de marca, nombre con tildes bien (#7), `aria-expanded`/`aria-current` (#17), contador 99+ (#29), botones de 44 px
-- [ ] 1.4 Home: textos reales de beneficios (#2, decisión D2), nueva jerarquía con `font-display`, CTA de adopción con terracota, `h2` correctos
+- [ ] 1.3 Header: colores de marca, ícono + texto en cada enlace (RIU03, §4.5), nombre con tildes bien (#7), `aria-expanded`/`aria-current` (#17), contador 99+ (#29), botones de 44 px
+- [ ] 1.4 Home: título "Cuida y adopta, en un solo lugar" y beneficios de §4.5 (#2, D2), cuidado y adopción con el mismo peso, nueva jerarquía con `font-display`, `h2` correctos; diseñado primero a 375 px
 - [ ] 1.5 Título y descripción del Home (§3.6)
 - *Listo cuando:* Home y Header se ven con la dirección A a 375 y 1280 px, contraste ≥ 4,5:1 en todo texto, y con "reducir movimiento" activado nada se desplaza.
 
