@@ -3,7 +3,6 @@ import EstadoCarga from "../components/EstadoCarga";
 
 // Página 404 (hallazgo #22): antes, una dirección que no existe mostraba el
 // encabezado y el pie con el centro vacío.
-// EstadoCarga todavía tiene su estilo gris: recibe los tokens en la Fase 3.3.
 
 const enlace =
   "presionable inline-flex min-h-11 items-center rounded-control px-5 text-base font-semibold no-underline";

@@ -438,10 +438,28 @@ comunidad (RF07), diario de salud (RF08), GPS (RF10) y compra real (RF11). **El 
     (de abajo del Home a Política: queda arriba).
 
 ### Fase 3 — Catálogo y tarjeta de producto · rama `rediseno-front-fase-3-catalogo` · 🟡
-- [ ] 3.1 `ProductCard`: tokens, agotado desactivado (#6), foto de respaldo (#27), precio único `utils/precio.js` (#28), sin campos muertos (#41), quitar `addRipple` y usar `presionable`
-- [ ] 3.2 Catalog: buscador de 16 px (#14, #15), filtros con `aria-pressed` y sin escala (#18), búsqueda sin tildes (#40), "Quitar filtros" (#39)
-- [ ] 3.3 `EstadoCarga` y `BotonVerMas` con los tokens nuevos (sin cambiar su comportamiento)
+- [x] 3.1 `ProductCard`: tokens, agotado desactivado (#6), foto de respaldo (#27), precio único `utils/precio.js` (#28), sin campos muertos (#41), quitar `addRipple` y usar `presionable`
+- [x] 3.2 Catalog: buscador de 16 px (#14, #15), filtros con `aria-pressed` y sin escala (#18), búsqueda sin tildes (#40), "Quitar filtros" (#39)
+- [x] 3.3 `EstadoCarga` y `BotonVerMas` con los tokens nuevos (sin cambiar su comportamiento)
 - *Listo cuando:* el catálogo se usa solo con teclado y un producto con stock 0 no se puede agregar.
+- *Hecha el 15/11/2026, pendiente de tu aprobación.* Revisada en el navegador a 320, 375 y 1280 px con la API encendida;
+  `impeccable detect` en `/catalogo` (1280 y 375 px): solo el fondo crema, que es la dirección A aprobada. Lint 0 errores,
+  build y 109 pruebas pasan (`tests/precio.test.js` y `tests/texto.test.js` son nuevas).
+  Peores datos simulados cambiando `window.fetch` en la pestaña (sin tocar BD ni archivos; se quitó al recargar):
+  nombre de 120 caracteres, stock 0, `image: null`, foto rota y precio 89900.5. Notas para otras fases:
+  - **Piezas nuevas para reusar:** `src/components/FotoConRespaldo.jsx` (`icono` + `tono` "marca" o "acento"; para
+    mascotas en las Fases 7 y 8: `icono={PawPrint} tono="acento"`), `src/utils/precio.js` (`formatearPrecio`) y
+    `src/utils/texto.js` (`coincideBusqueda`, que también sirve para un buscador de Adopción).
+  - **Todavía repiten `formatPrice`:** `ProductDetail.jsx` (Fase 4), `CartModal.jsx` (Fase 5) y `Checkout.jsx` (Fase 6).
+    Cambiarlos a `formatearPrecio` en su fase. Ojo: el precio máximo de la BD (99.999.999,99) sale "$ 100.000.000".
+  - **Tarjeta horizontal en celular** (< 640 px): foto de 96–112 px a la izquierda. También aplica a los destacados del Home.
+  - **`EstadoCarga` con `encabezado="h1"`** ahora usa `font-display` de 24–30 px: se nota en la 404 y en los estados de
+    carga y "no encontrado" de las fichas de mascota y producto.
+  - **Pendiente nuevo (`BotonVerMas`):** al pulsarlo con teclado, el botón se desactiva mientras carga y el foco cae al
+    inicio de la página. Arreglo propuesto: `aria-disabled` en vez de `disabled`, o enfocar el primer producto nuevo.
+    No se cambió aquí porque esta fase era "solo tokens"; decidir en la Fase 7 (Adopción también lo usa) o en la 12.
+  - **`useScrollReveal`** ya no lo usa el catálogo; solo queda en `Adoption.jsx` (Fase 7 decide si se borra).
+  - La prueba pendiente de la Fase 2 pasó: de abajo del catálogo a un producto, la ficha aparece arriba.
 
 ### Fase 4 — Ficha de producto · rama `rediseno-front-fase-4-producto` · 🟢
 - [ ] 4.1 ProductDetail con tokens, ícono de stock correcto (#31), foto de respaldo, título y descripción por producto
