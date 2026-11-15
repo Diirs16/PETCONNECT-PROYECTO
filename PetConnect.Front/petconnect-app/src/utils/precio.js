@@ -2,8 +2,9 @@
 // Antes cada archivo tenía su propia copia de formatPrice y, sin
 // maximumFractionDigits, un precio con centavos salía "$ 89.900,5".
 // En pesos no se usan centavos: se redondea al peso más cercano.
-// Pendiente: ProductDetail (Fase 4), CartModal (Fase 5) y Checkout (Fase 6)
-// todavía tienen su propia copia; se cambian a este archivo en su fase.
+// Pendiente: CartModal (Fase 5) y Checkout (Fase 6) todavía tienen su propia
+// copia; se cambian a este archivo en su fase. ProductCard (Fase 3) y
+// ProductDetail (Fase 4) ya lo usan.
 
 const FORMATO = new Intl.NumberFormat("es-CO", {
   style: "currency",

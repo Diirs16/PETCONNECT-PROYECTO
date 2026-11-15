@@ -60,15 +60,6 @@
   to { transform: translateX(100%); }
 }
 
-/* Onda de los botones: se borra cuando ProductCard (Fase 3) y
-   ProductDetail (Fase 4) dejen de llamar a addRipple(). */
-@keyframes ripple {
-  to {
-    transform: scale(4);
-    opacity: 0;
-  }
-}
-
 @keyframes badgePop {
   0% { transform: scale(0); }
   70% { transform: scale(1.2); }
@@ -149,20 +140,9 @@
   box-shadow: none;
 }
 
-/* Onda en botones (ver nota del keyframe ripple) */
-.btn-ripple {
-  position: relative;
-  overflow: hidden;
-}
-
-.btn-ripple .ripple-effect {
-  position: absolute;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.4);
-  transform: scale(0);
-  animation: ripple 0.6s linear;
-  pointer-events: none;
-}
+/* La onda tipo Material de los botones se borró en la Fase 4 (#45): la
+   respuesta al presionar es la utilidad "presionable" de index.css. CartModal
+   (Fase 5) y LoginModal (Fase 9) todavía llevan su clase vieja, sin efecto. */
 
 .img-zoom {
   overflow: hidden;
@@ -228,8 +208,8 @@
 /* --- Reducir movimiento (#12) --- */
 /* Si la persona activó "reducir movimiento" en su sistema, nada se desplaza
    ni cambia de tamaño: los desplazamientos se vuelven un fundido corto.
-   OJO: toast-exit y ripple-effect conservan una animación (fundido) porque
-   su JS espera "animationend" para borrarlos; con "none" se quedarían. */
+   OJO: toast-exit conserva una animación (fundido) porque su JS espera
+   "animationend" para borrar el aviso; con "none" se quedaría. */
 
 @media (prefers-reduced-motion: reduce) {
   .page-enter,
@@ -244,10 +224,6 @@
 
   .toast-exit {
     animation: fadeOut 150ms ease-in forwards;
-  }
-
-  .btn-ripple .ripple-effect {
-    animation: fadeOut 150ms linear forwards;
   }
 
   .cart-badge {
