@@ -17,3 +17,21 @@ export function coincideBusqueda(texto, busqueda) {
   if (buscado === "") return true;
   return normalizarTexto(texto).includes(buscado);
 }
+
+/**
+ * Resumen corto para la descripción de la pestaña (Fase 4, §3.6).
+ * Junta los saltos de línea y espacios repetidos en uno solo y, si el texto
+ * pasa de `maximo` letras, lo corta en el último espacio (para no partir una
+ * palabra) y agrega "…". El resultado nunca pasa de `maximo` letras.
+ * Lo que no es texto devuelve "".
+ */
+export function resumir(texto, maximo = 150) {
+  if (typeof texto !== "string") return "";
+  const limpio = texto.replace(/\s+/g, " ").trim();
+  if (limpio.length <= maximo) return limpio;
+  const corte = limpio.slice(0, maximo - 1); // deja lugar para "…"
+  const espacio = corte.lastIndexOf(" ");
+  // Si no hay un espacio en la segunda mitad (una palabra larguísima), se corta ahí mismo.
+  const base = espacio > maximo / 2 ? corte.slice(0, espacio) : corte;
+  return `${base.replace(/[\s,.;:—–-]+$/u, "")}…`;
+}

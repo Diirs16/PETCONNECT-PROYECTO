@@ -462,8 +462,34 @@ comunidad (RF07), diario de salud (RF08), GPS (RF10) y compra real (RF11). **El 
   - La prueba pendiente de la Fase 2 pasó: de abajo del catálogo a un producto, la ficha aparece arriba.
 
 ### Fase 4 — Ficha de producto · rama `rediseno-front-fase-4-producto` · 🟢
-- [ ] 4.1 ProductDetail con tokens, ícono de stock correcto (#31), foto de respaldo, título y descripción por producto
-- [ ] 4.2 Quitar `addRipple`; borrar `rippleEffect.js`, `@keyframes ripple` y `.btn-ripple` de `animations.css` (ya nadie lo llama)
+- [x] 4.1 ProductDetail con tokens, ícono de stock correcto (#31), foto de respaldo, título y descripción por producto
+- [x] 4.2 Quitar `addRipple`; borrar `rippleEffect.js`, `@keyframes ripple` y `.btn-ripple` de `animations.css` (ya nadie lo llama)
+- *Hecha el 15/11/2026, pendiente de tu aprobación.* Revisada en el navegador a 320, 375 y 1280 px con la API encendida;
+  `impeccable detect` en `/producto/13` (1280 y 375 px): solo el fondo crema (dirección A aprobada); el archivo fuente, 0.
+  Lint 0 errores, build y 114 pruebas pasan (5 nuevas de `resumir` en `tests/texto.test.js`). Solo teclado: volver al
+  catálogo, agregar al carrito y "Reintentar" funcionan, con foco visible. Peores datos simulados cambiando `window.fetch`
+  en la pestaña sobre `/api/productos/:id` (sin tocar BD ni archivos; se quitó al recargar): nombre de 120 caracteres,
+  stock 0, 1 y `"0"`, `image: null`, foto rota, precio 89900.5 ("$ 89.901"), descripción vacía, con saltos y de 2.000
+  caracteres, y `category: null`. Ninguno desborda a 320 px. Qué cambió:
+  - **Categoría:** ya no es una etiqueta en MAYÚSCULAS sobre el título (*eyebrow*, prohibido); ahora es un dato en una
+    lista `<dl>` ("Categoría" · "Disponibilidad") debajo del precio. Si no llega, la fila no se dibuja.
+  - **Botón antes de la descripción** en celular (no hay que bajar para comprar) y foto fija (`sticky`) en escritorio
+    mientras se lee una descripción larga.
+  - **Arreglo extra:** al cambiar de un producto a otro sin salir de la ficha se seguía viendo el producto (o el error)
+    anterior mientras cargaba el nuevo. Ahora la respuesta se guarda con el `id` que la pidió y, si no coincide, se ve
+    "Cargando producto…". Hoy no se notaba (no hay enlaces de ficha a ficha), pero sí con "Reintentar".
+
+  Notas para otras fases:
+  - **Clase vieja `btn-ripple`** (sin efecto, su CSS ya no existe): `CartModal.jsx:113` (Fase 5) y `LoginModal.jsx:312`
+    (Fase 9). Quitarla junto con `btn-hover` y usar `presionable`.
+  - **Todavía repiten `formatPrice`:** `CartModal.jsx` (Fase 5) y `Checkout.jsx` (Fase 6).
+  - **`resumir(texto, 150)`** en `src/utils/texto.js`: sirve para la descripción de la pestaña de la ficha de mascota (Fase 8).
+  - **`PetDetail.jsx` (Fase 8)** tiene el mismo problema de estado viejo al cambiar de `id` (`setEstado` igual que tenía
+    ProductDetail); aplicar el mismo arreglo de "pedida".
+  - **Stock `null`** cuenta como agotado (misma regla que la tarjeta: `Number(null)` es 0). Si la API no manda `stock`,
+    no se bloquea y no se muestra la fila de disponibilidad.
+  - **Contenido:** la foto del producto 14 (Unsplash) muestra la marca de una tienda real en la bolsa. Licencia libre,
+    pero puede confundir: decidir si se cambia en `seed.py` (fuera del Front).
 
 ### Fase 5 — Carrito · rama `rediseno-front-fase-5-carrito` · 🔴
 - [ ] 5.1 `CartModal` como `<dialog>` (#1), botones de 44 px (#10), nombre en 2 líneas (#30), salida animada (§3.4 #1), "Ver catálogo" si está vacío (#39)
