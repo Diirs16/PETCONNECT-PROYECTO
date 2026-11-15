@@ -419,10 +419,23 @@ comunidad (RF07), diario de salud (RF08), GPS (RF10) y compra real (RF11). **El 
   - El detector marca el fondo crema como "típico de IA": es la dirección A aprobada y se mantiene.
 
 ### Fase 2 — Pie y marco de la app · rama `rediseno-front-fase-2-marco` · 🟡
-- [ ] 2.1 Footer con `<Link>` (#4), contacto real (#3, D3), `h2` en vez de `h4`, año correcto (#42)
-- [ ] 2.2 `ZonaDeError` (#8), página 404 (#22), volver arriba al cambiar de página (#21)
-- [ ] 2.3 Carga diferida de Política, Checkout y RegisterModal (#33)
+- [x] 2.1 Footer con `<Link>` (#4), contacto real (#3, D3), `h2` en vez de `h4`, año correcto (#42)
+- [x] 2.2 `ZonaDeError` (#8), página 404 (#22), volver arriba al cambiar de página (#21)
+- [x] 2.3 Carga diferida de Política, Checkout y RegisterModal (#33)
 - *Listo cuando:* un error forzado en una página muestra el mensaje en vez de pantalla blanca, y `/xyz` muestra la 404.
+- *Hecha el 15/11/2026, pendiente de tu aprobación.* Revisada en el navegador a 320, 375 y 1280 px. JS principal: 324 → 298 kB
+  (Política 20,5 kB, Registro 10,4 kB y Checkout 4 kB salen aparte). Notas para otras fases:
+  - Tokens nuevos solo para el fondo noche: `noche-texto` #B9C4C2 (9,34:1), `noche-marca` #7FD3D6 (9,71:1, también el foco)
+    y `noche-acento` #E8733A (5,53:1, el naranja del logo). El foco general (`marca`) sobre noche da 2,71:1: no usarlo ahí.
+  - `src/utils/contacto.js` tiene `CORREO_ATENCION`. Todavía lo repiten: `AvisoDemo.jsx` (Fase 6), `FormularioSolicitud.jsx`
+    (Fase 8), `LoginModal.jsx` (Fase 9), `Contact.jsx` (Fase 10) y `PoliticaDatos.jsx` como `CORREO_DATOS` (Fase 11).
+    También la app móvil (fuera de este rediseño).
+  - **Fase 3.3:** `EstadoCarga` con `encabezado="h1"` dibuja el título a 16 px; `impeccable detect` marca la 404 como
+    "jerarquía plana". Al pasarlo a tokens, darle tamaño de título (`font-display`) cuando sea `h1`.
+  - El registro se descarga la primera vez que se abre y se queda montado (así conserva lo escrito si se cierra a medias).
+  - Volver arriba también aplica al botón "Atrás" del navegador (vuelve arriba en vez de recordar la posición).
+  - La prueba "de abajo del catálogo a un producto queda arriba" necesita la API encendida; sin ella se probó con el pie
+    (de abajo del Home a Política: queda arriba).
 
 ### Fase 3 — Catálogo y tarjeta de producto · rama `rediseno-front-fase-3-catalogo` · 🟡
 - [ ] 3.1 `ProductCard`: tokens, agotado desactivado (#6), foto de respaldo (#27), precio único `utils/precio.js` (#28), sin campos muertos (#41), quitar `addRipple` y usar `presionable`
