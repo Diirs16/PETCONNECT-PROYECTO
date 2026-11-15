@@ -407,12 +407,16 @@ comunidad (RF07), diario de salud (RF08), GPS (RF10) y compra real (RF11). **El 
 **Esfuerzo:** 🟢 < 30 min · 🟡 1–3 h · 🔴 medio día o más.
 
 ### Fase 1 — Tokens, Header y Home · rama `rediseno-front-fase-1-home` · 🔴
-- [ ] 1.1 Tokens de §4.3 en `index.css` (+ fuentes según D1) y `min-height: 100dvh` (#13, #35, #36, #44)
-- [ ] 1.2 Base de movimiento: `prefers-reduced-motion`, hover protegido, quitar *ripple* y animaciones sin uso; arreglar `useScrollReveal` (#12, #20, #24, #45, #41 en `animations.css`)
-- [ ] 1.3 Header: colores de marca, ícono + texto en cada enlace (RIU03, §4.5), nombre con tildes bien (#7), `aria-expanded`/`aria-current` (#17), contador 99+ (#29), botones de 44 px
-- [ ] 1.4 Home: título "Cuida y adopta, en un solo lugar" y beneficios de §4.5 (#2, D2), cuidado y adopción con el mismo peso, nueva jerarquía con `font-display`, `h2` correctos; diseñado primero a 375 px
-- [ ] 1.5 Título y descripción del Home (§3.6)
+- [x] 1.1 Tokens de §4.3 en `index.css` (+ fuentes según D1) y `min-height: 100dvh` (#13, #35, #36, #44)
+- [x] 1.2 Base de movimiento: `prefers-reduced-motion`, hover protegido, quitar *ripple* y animaciones sin uso; arreglar `useScrollReveal` (#12, #20, #24, #45, #41 en `animations.css`)
+- [x] 1.3 Header: colores de marca, ícono + texto en cada enlace (RIU03, §4.5), nombre con tildes bien (#7), `aria-expanded`/`aria-current` (#17), contador 99+ (#29), botones de 44 px
+- [x] 1.4 Home: título "Cuida y adopta, en un solo lugar" y beneficios de §4.5 (#2, D2), cuidado y adopción con el mismo peso, nueva jerarquía con `font-display`, `h2` correctos; diseñado primero a 375 px
+- [x] 1.5 Título y descripción del Home (§3.6)
 - *Listo cuando:* Home y Header se ven con la dirección A a 375 y 1280 px, contraste ≥ 4,5:1 en todo texto, y con "reducir movimiento" activado nada se desplaza.
+- *Cerrada el 15/11/2026.* Revisada en el navegador a 320, 375, 390 y 1280 px; `/impeccable audit` 15/20. Notas para otras fases:
+  - El CSS del *ripple* sigue porque `ProductCard` (Fase 3) y `ProductDetail` (Fase 4) llaman a `addRipple()`; ver nota en `rippleEffect.js`.
+  - `page-enter` quedó como fundido de 120 ms en **todas** las páginas; el fondo crema y la fuente Figtree también aplican a todo el sitio.
+  - El detector marca el fondo crema como "típico de IA": es la dirección A aprobada y se mantiene.
 
 ### Fase 2 — Pie y marco de la app · rama `rediseno-front-fase-2-marco` · 🟡
 - [ ] 2.1 Footer con `<Link>` (#4), contacto real (#3, D3), `h2` en vez de `h4`, año correcto (#42)
@@ -421,13 +425,14 @@ comunidad (RF07), diario de salud (RF08), GPS (RF10) y compra real (RF11). **El 
 - *Listo cuando:* un error forzado en una página muestra el mensaje en vez de pantalla blanca, y `/xyz` muestra la 404.
 
 ### Fase 3 — Catálogo y tarjeta de producto · rama `rediseno-front-fase-3-catalogo` · 🟡
-- [ ] 3.1 `ProductCard`: tokens, agotado desactivado (#6), foto de respaldo (#27), precio único `utils/precio.js` (#28), sin campos muertos (#41)
+- [ ] 3.1 `ProductCard`: tokens, agotado desactivado (#6), foto de respaldo (#27), precio único `utils/precio.js` (#28), sin campos muertos (#41), quitar `addRipple` y usar `presionable`
 - [ ] 3.2 Catalog: buscador de 16 px (#14, #15), filtros con `aria-pressed` y sin escala (#18), búsqueda sin tildes (#40), "Quitar filtros" (#39)
 - [ ] 3.3 `EstadoCarga` y `BotonVerMas` con los tokens nuevos (sin cambiar su comportamiento)
 - *Listo cuando:* el catálogo se usa solo con teclado y un producto con stock 0 no se puede agregar.
 
 ### Fase 4 — Ficha de producto · rama `rediseno-front-fase-4-producto` · 🟢
 - [ ] 4.1 ProductDetail con tokens, ícono de stock correcto (#31), foto de respaldo, título y descripción por producto
+- [ ] 4.2 Quitar `addRipple`; borrar `rippleEffect.js`, `@keyframes ripple` y `.btn-ripple` de `animations.css` (ya nadie lo llama)
 
 ### Fase 5 — Carrito · rama `rediseno-front-fase-5-carrito` · 🔴
 - [ ] 5.1 `CartModal` como `<dialog>` (#1), botones de 44 px (#10), nombre en 2 líneas (#30), salida animada (§3.4 #1), "Ver catálogo" si está vacío (#39)
@@ -459,6 +464,7 @@ comunidad (RF07), diario de salud (RF08), GPS (RF10) y compra real (RF11). **El 
 ### Fase 12 — Pulido final · rama `rediseno-front-fase-12-pulido` · 🟡
 - [ ] 12.1 Textos en mayúscula de oración en todo el sitio (#38)
 - [ ] 12.2 `/impeccable audit` completo (meta: ≥ 17/20) y revisión a 375 y 1280 px de todas las páginas
+- [ ] 12.3 Pendientes de la auditoría de la Fase 1: el menú móvil cierra con Escape; un solo nombre para cerrar sesión ("Salir" en escritorio y "Cerrar sesión" en celular)
 
 ### Fase 13 (opcional) — Pruebas de componentes · rama `rediseno-front-fase-13-pruebas` · 🔴
 - [ ] 13.1 Con `ecc:react-testing`: pruebas de `CartModal` (Escape, foco, tope de stock), `Header` (nombre con tildes) y `ProductCard` (agotado). Necesita instalar Vitest + Testing Library: se decide al llegar
