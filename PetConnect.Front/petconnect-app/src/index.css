@@ -32,6 +32,12 @@
   --color-aviso: #7a4a00;
   --color-aviso-claro: #fdf3dc;
   --color-noche: #14201f;         /* pie de página */
+  /* Colores claros para usar SOLO sobre noche (Fase 2). Contraste sobre #14201f: */
+  --color-noche-texto: #b9c4c2;   /* texto y enlaces del pie · 9,34:1 */
+  --color-noche-marca: #7fd3d6;   /* "Pet" del logo y contorno de foco · 9,71:1 */
+  --color-noche-acento: #e8733a;  /* "Connect" del logo (naranja del logo) · 5,53:1 */
+  /* Ojo: el foco general (marca) sobre noche da 2,71:1, menos del 3:1 pedido;
+     por eso dentro del pie el foco usa noche-marca. */
 
   /* Radios: solo tres (+ rounded-full para chips y botones de ícono) */
   --radius-control: 0.625rem;     /* 10 px: botones, campos */
