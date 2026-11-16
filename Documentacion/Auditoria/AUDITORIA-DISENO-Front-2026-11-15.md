@@ -669,9 +669,59 @@ comunidad (RF07), diario de salud (RF08), GPS (RF10) y compra real (RF11). **El 
   - **`datosMascota`** (`utils/mascota.js`) ya no lo usa ninguna página (solo sus pruebas); decidir en la Fase 12 si se borra.
 
 ### Fase 9 — Cuenta (inicio de sesión y registro) · rama `rediseno-front-fase-9-cuenta` · 🔴
-- [ ] 9.1 `LoginModal` y `RegisterModal` como `<dialog>` (#1), campos de 16 px con borde visible (#14, #15), `autoComplete` (#16), etiqueta del código (#9), spinner `motion-safe` (#43)
-- [ ] 9.2 `CasillaAutorizacion` con tokens **sin tocar el texto legal**
+- [x] 9.1 `LoginModal` y `RegisterModal` como `<dialog>` (#1), campos de 16 px con borde visible (#14, #15), `autoComplete` (#16), etiqueta del código (#9), spinner `motion-safe` (#43)
+- [x] 9.2 `CasillaAutorizacion` con tokens **sin tocar el texto legal**
 - *Listo cuando:* el registro completo se hace con teclado y lector de pantalla, y el código se autocompleta en el celular.
+- *Hecha el 16/11/2026, pendiente de tu aprobación.* Se hizo en cuatro partes, con lint, build y pruebas después de cada
+  una. Revisada en el navegador integrado a 320, 375 y 1280 px. Lint con 0 errores y **0 avisos** (ya no sale el de
+  `AuthContext`); el build y las 149 pruebas pasan (`tests/cuenta-dialogo.test.js` es nueva, con 7 pruebas, y
+  `tests/cerrar-sesion.test.js` se ajustó a `useCallback`/`useMemo` sin dejar de vigilar lo mismo). En los archivos de
+  cuenta no hay ningún hex, `gray-*`, `black`, `white`, `red-*`, `green-*` ni `amber-*`. `impeccable detect`: 0 hallazgos en
+  los archivos; en `/adopcion/3`, solo el fondo crema (dirección A aprobada). Contraste medido en la página: texto
+  ≥ 5,26:1, ayudas y textos de ejemplo 6,21:1, borde de los campos 3,80:1 y foco 6,16:1. Decisiones aprobadas:
+  - **D9.1** `src/components/DialogoCuenta.jsx`, compartido por los dos modales: `showModal()`, salida animada, Escape
+    (`cancel`), clic en el fondo solo si empezó y terminó fuera, título con `aria-labelledby` y foco al cerrar. Al pasar de
+    Iniciar sesión a Crear cuenta (o al revés), el que se va se cierra sin animación antes de que el otro abra; nunca hay
+    dos abiertos. Al entrar con éxito también se cierra al instante: el contenido ya cambió por debajo y una salida
+    animada mostraría el paso equivocado. La limpieza de cada paso va en el evento `close`, que llega siempre.
+  - **D9.2** Entrada `scale(0.96)` + opacidad en 200 ms y salida en 150 ms, fondo de tinta al 45 %; con "reducir
+    movimiento", solo un fundido de 150 ms. Se borraron `scaleIn`, `backdrop-fade`, `modal-enter` y `btn-hover`.
+  - **D9.3** El foco va al primer campo de cada paso (en Autorización, al título). Al cerrar vuelve a quien abrió; si ese
+    botón ya no se ve, al respaldo que indica con `data-foco-respaldo`: "Salir" (Header en escritorio), "Menú" (menú del
+    celular) o el título del formulario (ficha de adopción). **Cambio de comportamiento:** al cerrar, Iniciar sesión
+    conserva el correo y olvida la contraseña; Crear cuenta conserva nombre y correo y olvida las contraseñas y la
+    casilla (antes la X borraba todo el registro).
+  - **D9.4–D9.6** Campos de 16 px con borde `borde-fuerte`, `autoComplete`, código con etiqueta "Código de verificación",
+    `one-time-code` y teclado numérico; "Iniciar sesión" y "Crear cuenta" con minúscula; "…" en vez de "..."; botón X
+    "Cerrar inicio de sesión" / "Cerrar registro"; botón principal turquesa con `presionable`; avisos de error con
+    `role="alert"` en todos los pasos.
+  - **D9.7** La casilla usa `CORREO_ATENCION` (el texto que se ve es idéntico; se comprobó B.1, B.2 y B.3 letra por
+    letra en la página). `contacto.js` avisa que ese correo es parte del texto legal B.2.
+  - **D9.8** `useAuth` vive en `src/context/useAuth.js` y el valor del contexto está memorizado; cambió el import en
+    App, Header, FormularioSolicitud, LoginModal y RegisterModal.
+
+  Cómo se probó, sin crear cuentas ni iniciar sesión de verdad: se cambió `window.fetch` en la pestaña **solo** para
+  `/api/auth/*`, `/api/utils/validar-correo` y `/api/solicitudes/*`, con datos inventados (`@ejemplo.test`). La
+  contraseña la generó la página al azar y nunca se mostró; la espera del reenvío se adelantó cambiando `Date.now` en la
+  pestaña. Casos: inicio correcto, código incorrecto y correcto; 403 de autorización con la casilla sin marcar (no llama
+  a la API y el foco va a la casilla) y marcada; 401, 429, 500 y sin conexión; registro con nombre de 80 caracteres y
+  correo de 80 sin espacios; dominio válido, inválido y "no se pudo verificar"; contraseña que falla cada regla por
+  separado; código, reenvío bloqueado, reenvío correcto con su espera, 429 al reenviar y "Cambiar correo"; y, en la ficha
+  de adopción, "Inicia sesión para enviar" y "Volver a iniciar sesión" tras un 401 de la solicitud. Todo solo con
+  teclado: Tab nunca sale del diálogo y Escape cierra con el foco en su sitio. A 320 px nada desborda y el registro y la
+  autorización se desplazan dentro del diálogo, con el título fijo. Al final se devolvió `fetch` y el reloj, se recargó
+  y `localStorage` quedó vacío, como al empezar. "Reducir movimiento" no se puede emular en el navegador integrado: se
+  comprobó que las reglas cargadas solo dejan el fundido.
+
+  Notas para otras fases:
+  - **Pendientes que no se hicieron (cambian la lógica o los textos):** "Registrarse" queda desactivado hasta que todo es
+    válido y con teclado no explica por qué; el texto de ejemplo "Ej: MiPerro@2025" sugiere una contraseña concreta; en
+    la lista de reglas, el lector de pantalla oye el texto de cada regla pero no si se cumple (solo lo dicen el ícono y el
+    color); no existen "Mostrar contraseña" ni "Olvidé mi contraseña".
+  - **Fase 12:** `CartModal` puede pasar al mismo `DialogoCuenta` (o a un diálogo común) si se quiere un solo patrón; su
+    salida es distinta (panel lateral), así que no se tocó.
+  - **Captura del navegador integrado:** con el panel oculto, las capturas salen recortadas o con el diálogo
+    desvanecido aunque la opacidad calculada sea 1. Las medidas se hicieron con `getBoundingClientRect`.
 
 ### Fase 10 — Contacto · rama `rediseno-front-fase-10-contacto` · 🟢
 - [ ] 10.1 Contact con tokens; revisar contigo si el horario de atención es real

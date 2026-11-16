@@ -1,7 +1,8 @@
 import { useState, useMemo, useEffect, useRef } from "react";
-import { X, Check, AlertCircle, Loader2, RotateCw, MailCheck } from "lucide-react";
+import { Check, AlertCircle, Loader2, RotateCw, MailCheck } from "lucide-react";
 import CasillaAutorizacion from "./CasillaAutorizacion";
-import { useAuth } from "../context/AuthContext";
+import DialogoCuenta from "./DialogoCuenta";
+import { useAuth } from "../context/useAuth";
 import { esFormatoCorreoValido } from "../utils/validarCorreo";
 // Ítem 4.1 (A-17, NC-004): las reglas de la contraseña son las mismas de la API
 import { REGLAS_CONTRASENA } from "../utils/contrasena";
@@ -24,9 +25,30 @@ const FORM_VACIO = {
 };
 const MENSAJE_SIN_AUTORIZACION = "Para crear tu cuenta debes autorizar el tratamiento de tus datos personales.";
 
+// Fase 9 del rediseño: la ventana es un <dialog> (DialogoCuenta.jsx) con dos pasos
+// (datos y código). Colores de los tokens, campos de 16 px con borde borde-fuerte
+// (#14, #15), autoComplete (#16), el código con su etiqueta (#9), ayudas en
+// tinta-suave (#11) y spinners con motion-safe (#43). Mismas clases que LoginModal.
+const ETIQUETA = "mb-1.5 block text-sm font-semibold text-tinta";
+const CAMPO =
+  "block w-full rounded-control border border-borde-fuerte bg-superficie px-3 py-2.5 text-tinta caret-marca placeholder:text-tinta-suave focus:outline-2 focus:outline-offset-1 focus:outline-marca aria-invalid:border-error";
+const CAMPO_CODIGO = `${CAMPO} text-center text-2xl font-semibold tracking-widest tabular-nums`;
+const BOTON_PRINCIPAL =
+  "presionable inline-flex min-h-11 w-full items-center justify-center rounded-control bg-marca px-5 text-base font-semibold text-superficie enabled:hover:bg-marca-hover disabled:cursor-not-allowed disabled:opacity-60";
+const ENLACE = "font-semibold text-marca underline underline-offset-2 hover:text-marca-hover";
+const ERROR = "mb-4 rounded-control border border-error/40 bg-superficie px-3 py-2 text-base text-error";
+
+// Color del mensaje del correo según su estado (tokens con contraste ≥ 4,5:1)
+const COLOR_ESTADO_CORREO = {
+  valido: "text-exito",
+  verificando: "text-tinta-suave",
+  sin_verificar: "text-aviso",
+};
+
 export default function RegisterModal() {
   const {
     showRegister,
+    showLogin,
     setShowRegister,
     register,
     verifyCode,
@@ -66,7 +88,7 @@ export default function RegisterModal() {
     }
     // 2. Dominio: se confirma con el backend (consulta registros MX),
     //    con un pequeño retraso para no llamar la API en cada tecla.
-    setEmailStatus({ estado: "verificando", mensaje: "Verificando dominio..." });
+    setEmailStatus({ estado: "verificando", mensaje: "Verificando dominio…" });
     const timeoutId = setTimeout(async () => {
       try {
         const res = await validarCorreo(email);
@@ -99,8 +121,6 @@ export default function RegisterModal() {
   const segundosRestantes = Math.max(0, Math.ceil((reenviarDesde - ahora) / 1000));
   const sinReenvios = reenvios >= MAX_REENVIOS;
   const reenvioBloqueado = reenviando || segundosRestantes > 0 || sinReenvios;
-
-  if (!showRegister) return null;
 
   const iniciarEspera = () => {
     const t = Date.now();
@@ -191,260 +211,251 @@ export default function RegisterModal() {
     reiniciarReenvio();
   };
 
-  const handleClose = () => {
+  // D9.3: al cerrar de cualquier forma (X, Escape, fondo, al crear la cuenta o al
+  // pasar a Iniciar sesión) se conservan el nombre y el correo, y se olvidan las
+  // contraseñas y la casilla (vuelve a empezar SIN marcar). Antes la X borraba todo.
+  const alCerrar = () => {
     setShowRegister(false);
     setCode("");
-    setForm(FORM_VACIO);
+    setForm((f) => ({ ...FORM_VACIO, name: f.name, email: f.email }));
     reiniciarReenvio();
   };
 
+  const paso = pendingEmail ? "codigo" : "datos";
+  const conEstadoCorreo = emailStatus.estado !== "vacio";
+
   return (
-    // overflow-y-auto + min-h-full: si el formulario es más alto que la pantalla
-    // (celular de 375 × 812 con la casilla de datos), se desplaza en vez de cortarse.
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      <div
-        className="fixed inset-0 bg-black/40 backdrop-fade"
-        onClick={handleClose}
-      />
-      <div
-        className="relative flex min-h-full items-center justify-center p-4"
-        onClick={(e) => e.target === e.currentTarget && handleClose()}   // clic fuera del modal
-      >
-      <div className="modal-enter relative bg-white rounded-xl shadow-xl w-full max-w-sm p-6">
-        <button
-          onClick={handleClose}
-          className="absolute top-4 right-4 p-1 hover:bg-gray-100 rounded-full"
-          aria-label="Cerrar"
-        >
-          <X className="w-5 h-5" />
-        </button>
-
-        {!pendingEmail ? (
-          <>
-            <h2 className="text-xl font-bold mb-6 text-center">Crear Cuenta</h2>
-
-            {authError && (
-              <p role="alert" className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2 mb-4 text-center">
-                {authError}
-              </p>
-            )}
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label htmlFor="reg-name" className="block text-sm font-medium mb-1">
-                  Nombre completo
-                </label>
-                <input
-                  id="reg-name"
-                  name="name"
-                  type="text"
-                  value={form.name}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-black"
-                  placeholder="Tu nombre"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="reg-email" className="block text-sm font-medium mb-1">
-                  Correo electrónico
-                </label>
-                <input
-                  id="reg-email"
-                  name="email"
-                  type="email"
-                  value={form.email}
-                  onChange={handleChange}
-                  required
-                  className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none ${
-                    emailBloqueaEnvio
-                      ? "border-red-400 focus:border-red-500"
-                      : "border-gray-300 focus:border-black"
-                  }`}
-                  placeholder="tu@correo.com"
-                />
-                {emailStatus.estado !== "vacio" && (
-                  <p
-                    className={`mt-1.5 flex items-center gap-1.5 text-xs ${
-                      emailStatus.estado === "valido"
-                        ? "text-green-600"
-                        : emailStatus.estado === "verificando"
-                        ? "text-gray-400"
-                        : emailStatus.estado === "sin_verificar"
-                        ? "text-amber-600"
-                        : "text-red-600"
-                    }`}
-                  >
-                    {emailStatus.estado === "verificando" ? (
-                      <Loader2 className="w-3.5 h-3.5 shrink-0 animate-spin" />
-                    ) : emailStatus.estado === "valido" ? (
-                      <Check className="w-3.5 h-3.5 shrink-0" />
-                    ) : (
-                      <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                    )}
-                    {emailStatus.mensaje}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label htmlFor="reg-password" className="block text-sm font-medium mb-1">
-                  Contraseña
-                </label>
-                <input
-                  id="reg-password"
-                  name="password"
-                  type="password"
-                  value={form.password}
-                  onChange={handleChange}
-                  onFocus={() => setShowRules(true)}
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-black"
-                  placeholder='Ej: MiPerro@2025'
-                />
-                {showRules && (
-                  <ul className="mt-2 space-y-1">
-                    {ruleResults.map((r) => (
-                      <li key={r.id} className={`flex items-center gap-1.5 text-xs ${r.ok ? "text-green-600" : "text-gray-400"}`}>
-                        {r.ok
-                          ? <Check className="w-3.5 h-3.5 shrink-0" />
-                          : <AlertCircle className="w-3.5 h-3.5 shrink-0" />}
-                        {r.label}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-
-              <div>
-                <label htmlFor="reg-confirm" className="block text-sm font-medium mb-1">
-                  Confirmar contraseña
-                </label>
-                <input
-                  id="reg-confirm"
-                  name="confirmPassword"
-                  type="password"
-                  value={form.confirmPassword}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-black"
-                  placeholder="Repite tu contraseña"
-                />
-              </div>
-
-              {/* NC-005: autorización previa, expresa e informada (Ley 1581, arts. 9 y 12) */}
-              <CasillaAutorizacion
-                ref={aceptaRef}
-                id="reg-acepta"
-                name="aceptaDatos"
-                checked={form.aceptaDatos}
-                onChange={handleChange}
-              />
-
-              <button
-                type="submit"
-                disabled={loading || emailBloqueaEnvio || !allRulesOk || form.password !== form.confirmPassword}
-                className="w-full bg-black text-white py-2.5 rounded-lg font-medium hover:bg-gray-800 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
-              >
-                {loading ? "Enviando código..." : "Registrarse"}
-              </button>
-            </form>
-
-            <p className="text-center text-sm text-gray-500 mt-4">
-              ¿Ya tienes cuenta?{" "}
-              <button
-                onClick={openLogin}
-                className="text-black font-medium hover:underline"
-              >
-                Inicia sesión
-              </button>
+    <DialogoCuenta
+      abierto={showRegister}
+      paso={paso}
+      titulo={paso === "datos" ? "Crear cuenta" : "Verificar correo"}
+      idTitulo="registro-titulo"
+      etiquetaCerrar="Cerrar registro"
+      cambiando={showLogin}
+      alCerrar={alCerrar}
+    >
+      {paso === "datos" ? (
+        <>
+          {authError && (
+            <p role="alert" className={ERROR}>
+              {authError}
             </p>
-          </>
-        ) : (
-          <>
-            <h2 className="text-xl font-bold mb-2 text-center">Verificar correo</h2>
-            <p className="text-sm text-gray-500 text-center mb-6">
-              Ingresa el código de 6 dígitos que enviamos a{" "}
-              <span className="font-medium text-gray-800">{pendingEmail}</span>
-            </p>
+          )}
 
-            {authError && (
-              <p role="alert" className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2 mb-4 text-center">
-                {authError}
-              </p>
-            )}
-
-            <form onSubmit={handleVerify} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label htmlFor="reg-name" className={ETIQUETA}>
+                Nombre completo
+              </label>
               <input
+                id="reg-name"
+                name="name"
+                type="text"
+                autoComplete="name"
+                value={form.name}
+                onChange={handleChange}
+                required
+                data-autofoco
+                className={`${CAMPO} text-base`}
+                placeholder="Tu nombre"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="reg-email" className={ETIQUETA}>
+                Correo electrónico
+              </label>
+              <input
+                id="reg-email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                value={form.email}
+                onChange={handleChange}
+                required
+                aria-invalid={emailBloqueaEnvio || undefined}
+                aria-describedby={conEstadoCorreo ? "reg-email-estado" : undefined}
+                className={`${CAMPO} text-base`}
+                placeholder="tu@correo.com"
+              />
+              {conEstadoCorreo && (
+                <p
+                  id="reg-email-estado"
+                  className={`mt-1.5 flex items-start gap-1.5 text-sm break-words ${
+                    COLOR_ESTADO_CORREO[emailStatus.estado] ?? "text-error"
+                  }`}
+                >
+                  {emailStatus.estado === "verificando" ? (
+                    <Loader2 className="mt-0.5 h-4 w-4 shrink-0 motion-safe:animate-spin" aria-hidden="true" />
+                  ) : emailStatus.estado === "valido" ? (
+                    <Check className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                  ) : (
+                    <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                  )}
+                  <span className="min-w-0">{emailStatus.mensaje}</span>
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label htmlFor="reg-password" className={ETIQUETA}>
+                Contraseña
+              </label>
+              <input
+                id="reg-password"
+                name="password"
+                type="password"
+                autoComplete="new-password"
+                value={form.password}
+                onChange={handleChange}
+                onFocus={() => setShowRules(true)}
+                required
+                aria-describedby={showRules ? "reg-reglas" : undefined}
+                className={`${CAMPO} text-base`}
+                placeholder="Ej: MiPerro@2025"
+              />
+              {showRules && (
+                <ul id="reg-reglas" className="mt-2 space-y-1">
+                  {ruleResults.map((r) => (
+                    <li
+                      key={r.id}
+                      className={`flex items-start gap-1.5 text-sm ${r.ok ? "text-exito" : "text-tinta-suave"}`}
+                    >
+                      {r.ok ? (
+                        <Check className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                      ) : (
+                        <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                      )}
+                      {r.label}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            <div>
+              <label htmlFor="reg-confirm" className={ETIQUETA}>
+                Confirmar contraseña
+              </label>
+              <input
+                id="reg-confirm"
+                name="confirmPassword"
+                type="password"
+                autoComplete="new-password"
+                value={form.confirmPassword}
+                onChange={handleChange}
+                required
+                className={`${CAMPO} text-base`}
+                placeholder="Repite tu contraseña"
+              />
+            </div>
+
+            {/* NC-005: autorización previa, expresa e informada (Ley 1581, arts. 9 y 12) */}
+            <CasillaAutorizacion
+              ref={aceptaRef}
+              id="reg-acepta"
+              name="aceptaDatos"
+              checked={form.aceptaDatos}
+              onChange={handleChange}
+            />
+
+            <button
+              type="submit"
+              disabled={loading || emailBloqueaEnvio || !allRulesOk || form.password !== form.confirmPassword}
+              className={BOTON_PRINCIPAL}
+            >
+              {loading ? "Enviando código…" : "Registrarse"}
+            </button>
+          </form>
+
+          <p className="mt-5 text-sm text-tinta-suave">
+            ¿Ya tienes cuenta?{" "}
+            <button type="button" onClick={openLogin} className={ENLACE}>
+              Inicia sesión
+            </button>
+          </p>
+        </>
+      ) : (
+        <>
+          <p id="reg-codigo-ayuda" className="mb-5 text-base text-tinta-suave">
+            Ingresa el código de 6 dígitos que enviamos a{" "}
+            <span className="font-semibold break-all text-tinta">{pendingEmail}</span>
+          </p>
+
+          {authError && (
+            <p role="alert" className={ERROR}>
+              {authError}
+            </p>
+          )}
+
+          <form onSubmit={handleVerify} className="space-y-4">
+            <div>
+              <label htmlFor="reg-codigo" className={ETIQUETA}>
+                Código de verificación
+              </label>
+              <input
+                id="reg-codigo"
                 type="text"
                 inputMode="numeric"
+                autoComplete="one-time-code"
                 maxLength={6}
                 value={code}
                 onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
                 required
-                autoFocus
-                className="w-full px-3 py-3 border border-gray-300 rounded-lg text-center text-2xl font-bold tracking-widest focus:outline-none focus:border-black"
+                data-autofoco
+                aria-describedby="reg-codigo-ayuda"
+                className={CAMPO_CODIGO}
                 placeholder="------"
               />
-
-              <button
-                type="submit"
-                disabled={loading || code.length !== 6}
-                className="w-full bg-black text-white py-2.5 rounded-lg font-medium hover:bg-gray-800 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
-              >
-                {loading ? "Verificando..." : "Confirmar código"}
-              </button>
-            </form>
-
-            <div className="mt-5 pt-4 border-t border-gray-100">
-              <p className="text-center text-sm text-gray-500 mb-2">¿No recibiste el código?</p>
-              <button
-                type="button"
-                onClick={handleResend}
-                aria-disabled={reenvioBloqueado}
-                className="w-full min-h-11 inline-flex items-center justify-center gap-2 border border-gray-300 bg-white text-black py-2.5 rounded-lg text-sm font-medium transition-colors hover:bg-gray-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black aria-disabled:bg-gray-50 aria-disabled:text-gray-600 aria-disabled:cursor-not-allowed"
-              >
-                <RotateCw className={`w-4 h-4 shrink-0 ${reenviando ? "animate-spin" : ""}`} aria-hidden="true" />
-                <span className="tabular-nums">
-                  {reenviando
-                    ? "Reenviando..."
-                    : sinReenvios
-                    ? "Ya no se puede reenviar más"
-                    : segundosRestantes > 0
-                    ? `Reenviar en ${segundosRestantes} s`
-                    : "Reenviar código"}
-                </span>
-              </button>
-
-              {/* Siempre en el DOM para que los lectores de pantalla anuncien el cambio */}
-              <div role="status" aria-live="polite">
-                {avisoReenvio && (
-                  <p className="mt-3 flex items-start gap-2 text-sm text-green-800 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
-                    <MailCheck className="w-4 h-4 shrink-0 mt-0.5" aria-hidden="true" />
-                    <span>
-                      {avisoReenvio}
-                      {sinReenvios && " Ya usaste los reenvíos de este código; si no llega, revisa que el correo esté bien escrito."}
-                    </span>
-                  </p>
-                )}
-              </div>
-
-              <p className="text-center text-sm text-gray-500 mt-4">
-                ¿Escribiste mal tu correo?{" "}
-                <button
-                  type="button"
-                  onClick={handleChangeEmail}
-                  className="text-black font-medium underline-offset-2 hover:underline focus-visible:underline"
-                >
-                  Cambiar correo
-                </button>
-              </p>
             </div>
-          </>
-        )}
-      </div>
-      </div>
-    </div>
+
+            <button type="submit" disabled={loading || code.length !== 6} className={BOTON_PRINCIPAL}>
+              {loading ? "Verificando…" : "Confirmar código"}
+            </button>
+          </form>
+
+          <div className="mt-5 border-t border-borde pt-4">
+            <p className="mb-2 text-sm text-tinta-suave">¿No recibiste el código?</p>
+            <button
+              type="button"
+              onClick={handleResend}
+              aria-disabled={reenvioBloqueado}
+              className="presionable inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-control border border-borde-fuerte bg-superficie px-5 text-base font-semibold text-tinta hover:border-marca hover:text-marca aria-disabled:cursor-not-allowed aria-disabled:border-borde aria-disabled:bg-papel aria-disabled:text-tinta-suave"
+            >
+              <RotateCw className={`h-4 w-4 shrink-0 ${reenviando ? "motion-safe:animate-spin" : ""}`} aria-hidden="true" />
+              <span className="tabular-nums">
+                {reenviando
+                  ? "Reenviando…"
+                  : sinReenvios
+                  ? "Ya no se puede reenviar más"
+                  : segundosRestantes > 0
+                  ? `Reenviar en ${segundosRestantes} s`
+                  : "Reenviar código"}
+              </span>
+            </button>
+
+            {/* Siempre en el DOM para que los lectores de pantalla anuncien el cambio */}
+            <div role="status" aria-live="polite">
+              {avisoReenvio && (
+                <p className="mt-3 flex items-start gap-2 rounded-control border border-exito/40 bg-superficie px-3 py-2 text-sm text-exito">
+                  <MailCheck className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                  <span>
+                    {avisoReenvio}
+                    {sinReenvios && " Ya usaste los reenvíos de este código; si no llega, revisa que el correo esté bien escrito."}
+                  </span>
+                </p>
+              )}
+            </div>
+
+            <p className="mt-4 text-sm text-tinta-suave">
+              ¿Escribiste mal tu correo?{" "}
+              <button type="button" onClick={handleChangeEmail} className={ENLACE}>
+                Cambiar correo
+              </button>
+            </p>
+          </div>
+        </>
+      )}
+    </DialogoCuenta>
   );
 }

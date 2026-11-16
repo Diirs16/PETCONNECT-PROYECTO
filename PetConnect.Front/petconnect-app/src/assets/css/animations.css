@@ -26,57 +26,10 @@
   to { opacity: 1; }
 }
 
-@keyframes scaleIn {
-  from {
-    opacity: 0;
-    transform: scale(0.9);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-/* --- Animaciones de componentes --- */
-
-/* Fondo oscuro de modales */
-.backdrop-fade {
-  animation: fadeIn 0.25s ease-out forwards;
-}
-
-/* Modales */
-.modal-enter {
-  animation: scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-/* --- Efectos al pasar el mouse --- */
-/* Las reglas :hover van dentro de (hover: hover) and (pointer: fine): en el
-   celular no hay mouse y la tarjeta se quedaba "levantada" después de
-   tocarla (#24). */
-
-.btn-hover {
-  position: relative;
-  overflow: hidden;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.btn-hover:active {
-  transform: translateY(0);
-  box-shadow: none;
-}
-
-/* La onda tipo Material de los botones se borró en la Fase 4 (#45): la
-   respuesta al presionar es la utilidad "presionable" de index.css. LoginModal
-   (Fase 9) todavía lleva la clase vieja de la onda, sin efecto. */
-
-/* Fase 7: se borraron card-hover, img-zoom y link-animate (solo los usaba
-   Adopción; su tarjeta ya no sube ni hace zoom). btn-hover queda por LoginModal. */
-@media (hover: hover) and (pointer: fine) {
-  .btn-hover:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  }
-}
+/* Fase 9: se borraron scaleIn, backdrop-fade, modal-enter y btn-hover (solo los
+   usaban LoginModal y RegisterModal). Las ventanas de cuenta ahora son un
+   <dialog> con su propia entrada y salida (más abajo, "Ventanas de cuenta"), y
+   la respuesta al presionar es la utilidad "presionable" de index.css (#45). */
 
 /* --- Entrada de página --- */
 /* Solo un fundido corto: la navegación es frecuente y el desplazamiento
@@ -89,8 +42,7 @@
 /* --- Carrito lateral (Fase 5, §3.4 #1) --- */
 /* CartModal es un <dialog>. Mientras haya uno abierto, la página de atrás no se
    desplaza (#1); scrollbar-gutter guarda el espacio de la barra para que la
-   página no salte de lado. LoginModal y RegisterModal lo aprovecharán cuando
-   pasen a <dialog> (Fase 9). */
+   página no salte de lado. También vale para LoginModal y RegisterModal (Fase 9). */
 html:has(dialog[open]) {
   overflow: hidden;
   scrollbar-gutter: stable;
@@ -132,6 +84,53 @@ html:has(dialog[open]) {
   }
   .carrito-dialogo.cerrando,
   .carrito-dialogo.cerrando::backdrop {
+    opacity: 0;
+    transition: opacity 150ms ease-in;
+  }
+}
+
+/* --- Ventanas de cuenta: iniciar sesión y crear cuenta (Fase 9, §3.4 #4) --- */
+/* LoginModal y RegisterModal usan DialogoCuenta.jsx (un <dialog>). Entran
+   creciendo de 0,96 a 1 con fundido en 200 ms y salen en 150 ms (más rápido que
+   la entrada): la clase "cerrando" dura lo mismo que DURACION_SALIDA_MS. El fondo
+   es el mismo del carrito: la tinta al 45 %. */
+.cuenta-dialogo::backdrop {
+  background: color-mix(in srgb, var(--color-tinta) 45%, transparent);
+}
+
+@keyframes cuenta-entra {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .cuenta-dialogo[open] {
+    animation: cuenta-entra 200ms var(--ease-out);
+  }
+  .cuenta-dialogo[open]::backdrop {
+    animation: fadeIn 200ms var(--ease-out);
+  }
+  .cuenta-dialogo.cerrando {
+    opacity: 0;
+    transform: scale(0.96);
+    transition: opacity 150ms var(--ease-out), transform 150ms var(--ease-out);
+  }
+  .cuenta-dialogo.cerrando::backdrop {
+    opacity: 0;
+    transition: opacity 150ms var(--ease-out);
+  }
+}
+
+/* Con "reducir movimiento" no cambia de tamaño: solo un fundido de 150 ms */
+@media (prefers-reduced-motion: reduce) {
+  .cuenta-dialogo[open],
+  .cuenta-dialogo[open]::backdrop {
+    animation: fadeIn 150ms ease-out;
+  }
+  .cuenta-dialogo.cerrando,
+  .cuenta-dialogo.cerrando::backdrop {
     opacity: 0;
     transition: opacity 150ms ease-in;
   }
@@ -184,14 +183,7 @@ html:has(dialog[open]) {
 
 @media (prefers-reduced-motion: reduce) {
   .page-enter,
-  .modal-enter,
-  .backdrop-fade,
   .toast-enter {
     animation: fadeIn 150ms ease-out both;
-  }
-
-  .btn-hover:hover,
-  .btn-hover:active {
-    transform: none;
   }
 }

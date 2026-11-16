@@ -7,7 +7,7 @@ import AvisoCarrito from "./components/AvisoCarrito";
 import LoginModal from "./components/LoginModal";
 import EstadoCarga from "./components/EstadoCarga";
 import ZonaDeError from "./components/ZonaDeError";
-import { useAuth } from "./context/AuthContext";
+import { useAuth } from "./context/useAuth";
 import Home from "./pages/Home";
 import Catalog from "./pages/Catalog";
 import ProductDetail from "./pages/ProductDetail";

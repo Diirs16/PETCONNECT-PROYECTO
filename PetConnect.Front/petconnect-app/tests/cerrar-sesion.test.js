@@ -170,9 +170,13 @@ test("AuthContext: logout llama a la API con cerrarSesion y existe un cierre sol
   const contexto = leer("../src/context/AuthContext.jsx");
   assert.match(contexto, /import \{[^}]*\bcerrarSesion\b[^}]*\} from "\.\.\/utils\/sesion"/);
   assert.match(contexto, /\bcerrarSesionEnServidor\b/);
-  assert.match(contexto, /const logout = \(\) =>\s*cerrarSesion\(/);
-  assert.match(contexto, /const cerrarSesionLocal = \(\) =>/);
-  assert.match(contexto, /value=\{\{[\s\S]*\bcerrarSesionLocal\b[\s\S]*\}\}/);
+  // Fase 9 (#32): las funciones van dentro de useCallback y el valor del contexto
+  // en useMemo. Se vigila lo mismo: logout llama a cerrarSesion, existe el cierre
+  // solo local y los dos se entregan en el valor del contexto.
+  assert.match(contexto, /const logout = useCallback\(\(\) =>\s*cerrarSesion\(/);
+  assert.match(contexto, /const cerrarSesionLocal = useCallback\(\(\) =>/);
+  assert.match(contexto, /useMemo\(\s*\(\) => \(\{[\s\S]*\blogout\b[\s\S]*\bcerrarSesionLocal\b[\s\S]*\}\)/);
+  assert.match(contexto, /<AuthContext\.Provider value=\{valor\}>/);
 });
 
 test("FormularioSolicitud: tras un 401 solo cierra en local (no llama a la API)", () => {

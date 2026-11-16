@@ -12,7 +12,7 @@ import {
   X,
 } from "lucide-react";
 import { useCart } from "../context/useCart";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/useAuth";
 
 // Cada enlace lleva ícono y texto (RIU03 y RNF02: nada escondido detrás de un
 // ícono solo). Solo se listan secciones que ya existen.
@@ -142,6 +142,7 @@ export default function Header() {
                 <span className="truncate">{nombre}</span>
               </span>
               <button
+                id="cuenta-salir"
                 type="button"
                 onClick={salir}
                 disabled={cerrando}
@@ -151,9 +152,11 @@ export default function Header() {
               </button>
             </div>
           ) : (
+            // Fase 9 (D9.3): al entrar este botón cambia por "Salir"; el foco va ahí
             <button
               type="button"
               onClick={openLogin}
+              data-foco-respaldo="cuenta-salir"
               className="presionable hidden min-h-11 items-center gap-2 rounded-full border border-borde-fuerte px-4 text-sm font-medium text-tinta hover:border-marca hover:text-marca lg:inline-flex"
             >
               <User className="h-4 w-4" aria-hidden="true" />
@@ -162,6 +165,7 @@ export default function Header() {
           )}
 
           <button
+            id="boton-menu"
             type="button"
             onClick={() => setMenuOpen(!menuOpen)}
             aria-expanded={menuOpen}
@@ -222,12 +226,14 @@ export default function Header() {
                 )}
               </button>
             ) : (
+              // Fase 9 (D9.3): el menú se cierra al abrir la ventana; el foco vuelve a "Menú"
               <button
                 type="button"
                 onClick={() => {
                   openLogin();
                   setMenuOpen(false);
                 }}
+                data-foco-respaldo="boton-menu"
                 className="flex min-h-12 w-full items-center gap-3 rounded-control px-3 text-left text-base font-medium text-tinta hover:bg-papel"
               >
                 <User className="h-5 w-5" aria-hidden="true" />
