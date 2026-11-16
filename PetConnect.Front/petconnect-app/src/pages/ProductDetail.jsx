@@ -4,8 +4,7 @@ import { ArrowLeft, CircleCheck, Package, PackageX, ShoppingCart } from "lucide-
 import { getProducto } from "../services/api";
 import EstadoCarga from "../components/EstadoCarga";
 import FotoConRespaldo from "../components/FotoConRespaldo";
-import { useCart } from "../context/CartContext";
-import { showAddToCartToast } from "../assets/js/addToCartToast";
+import { useCart } from "../context/useCart";
 import { formatearPrecio } from "../utils/precio";
 import { resumir } from "../utils/texto";
 
@@ -121,7 +120,6 @@ export default function ProductDetail() {
   const handleAdd = () => {
     if (agotado) return; // doble barrera: el botón ya viene desactivado
     addItem(product);
-    showAddToCartToast(product.name);
   };
 
   return (

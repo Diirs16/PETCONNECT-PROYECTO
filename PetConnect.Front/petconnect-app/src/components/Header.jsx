@@ -11,7 +11,7 @@ import {
   User,
   X,
 } from "lucide-react";
-import { useCart } from "../context/CartContext";
+import { useCart } from "../context/useCart";
 import { useAuth } from "../context/AuthContext";
 
 // Cada enlace lleva ícono y texto (RIU03 y RNF02: nada escondido detrás de un
@@ -41,6 +41,16 @@ const textoContador = (n) => (n > 99 ? "99+" : String(n));
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const { totalItems, setIsOpen } = useCart();
+  // Fase 5 (§3.4 #3): el contador da un pulso cuando cambia la cantidad (une el
+  // clic en "Agregar" con el carrito). Al cargar la página no pulsa: solo se
+  // cuenta un pulso cuando el número es distinto al anterior. Guardar el valor
+  // anterior en el estado durante el render es el patrón que recomienda React.
+  const [totalAnterior, setTotalAnterior] = useState(totalItems);
+  const [pulsos, setPulsos] = useState(0);
+  if (totalItems !== totalAnterior) {
+    setTotalAnterior(totalItems);
+    setPulsos((n) => n + 1);
+  }
   const { user, logout, openLogin } = useAuth();
   const location = useLocation();
   // Ítem 4.13 (A-03): mientras la API responde, el botón queda desactivado
@@ -113,8 +123,9 @@ export default function Header() {
             <ShoppingCart className="h-5 w-5" aria-hidden="true" />
             {totalItems > 0 && (
               <span
+                key={pulsos} // un número nuevo vuelve a montar el contador y repite el pulso
                 aria-hidden="true"
-                className="absolute right-0 top-0 h-5 min-w-5 rounded-full bg-acento px-1 text-center text-xs font-semibold leading-5 tabular-nums text-superficie"
+                className={`absolute right-0 top-0 h-5 min-w-5 rounded-full bg-acento px-1 text-center text-xs font-semibold leading-5 tabular-nums text-superficie ${pulsos > 0 ? "contador-pulso" : ""}`}
               >
                 {textoContador(totalItems)}
               </span>
