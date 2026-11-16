@@ -1,7 +1,6 @@
 import { Package, PackageX, ShoppingCart } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useCart } from "../context/CartContext";
-import { showAddToCartToast } from "../assets/js/addToCartToast";
+import { useCart } from "../context/useCart";
 import FotoConRespaldo from "./FotoConRespaldo";
 import { formatearPrecio } from "../utils/precio";
 
@@ -23,7 +22,6 @@ export default function ProductCard({ product }) {
   const handleAdd = () => {
     if (agotado) return;
     addItem(product);
-    showAddToCartToast(product.name);
   };
 
   return (

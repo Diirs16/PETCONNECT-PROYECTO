@@ -492,10 +492,47 @@ comunidad (RF07), diario de salud (RF08), GPS (RF10) y compra real (RF11). **El 
     pero puede confundir: decidir si se cambia en `seed.py` (fuera del Front).
 
 ### Fase 5 — Carrito · rama `rediseno-front-fase-5-carrito` · 🔴
-- [ ] 5.1 `CartModal` como `<dialog>` (#1), botones de 44 px (#10), nombre en 2 líneas (#30), salida animada (§3.4 #1), "Ver catálogo" si está vacío (#39)
-- [ ] 5.2 `CartContext`: tope de stock (#6), guardado en `localStorage` (#5), valor memorizado y `useCart` en su archivo (#32)
-- [ ] 5.3 Aviso "agregado" como zona `role="status"` de React (#19) y pulso del ícono (§3.4 #3)
+- [x] 5.1 `CartModal` como `<dialog>` (#1), botones de 44 px (#10), nombre en 2 líneas (#30), salida animada (§3.4 #1), "Ver catálogo" si está vacío (#39)
+- [x] 5.2 `CartContext`: tope de stock (#6), guardado en `localStorage` (#5), valor memorizado y `useCart` en su archivo (#32)
+- [x] 5.3 Aviso "agregado" como zona `role="status"` de React (#19) y pulso del ícono (§3.4 #3)
 - *Listo cuando:* recargar no vacía el carrito, Escape lo cierra y el foco vuelve al ícono.
+- *Hecha el 15/11/2026, pendiente de tu aprobación.* Revisada en el navegador integrado a 320, 375 y 1280 px con la API encendida.
+  Lint 0 errores (queda el aviso de `AuthContext`, Fase 9), build y 139 pruebas pasan (`tests/carrito.test.js` es nueva y
+  `tests/aviso-carrito.test.js` se reescribió). `impeccable detect`: 0 hallazgos en los archivos del carrito; en `/catalogo`
+  (1280 y 375 px) solo el fondo crema (dirección A aprobada). El escaneo por URL abre su propio navegador con el carrito
+  cerrado, así que el carrito abierto se revisó a mano: texto ≥ 6,16:1 y borde de los botones de cantidad 3,80:1.
+  Decisiones aprobadas:
+  - **D5.1 Producto guardado que cambió:** al cargar se pide cada producto a la API. Si ya no existe (404) o quedó en
+    stock 0, se quita; si hay menos stock, la cantidad baja al stock. Se avisa en un recuadro "Actualizamos tu carrito" la
+    próxima vez que se abre (se borra al cerrar). Si la API no responde, **no se borra nada** y sale "Reintentar".
+  - **D5.2 Al cerrar sesión el carrito se conserva** (solo guarda id y cantidad, nada personal).
+  - **D5.3 Una llamada por producto** con `getProducto(id)` (ya existía en `api.js`), en paralelo, con un máximo de 50
+    productos distintos. Descartada la lista del catálogo (va por páginas y no distingue "borrado" de "en otra página").
+  - **Aviso dentro de `addItem`:** el carrito decide si de verdad agregó ("Ya tienes las 6 unidades disponibles" en vez de
+    "agregado"). Por eso en `ProductCard` y `ProductDetail` se quitó la línea `showAddToCartToast(...)` además del import.
+  Peores datos (sin tocar BD ni archivos): para que la carga inicial fallara se guardó un token con "€" (el navegador no
+  deja mandarlo en un encabezado y la llamada falla como "sin conexión"); luego se quitó, se simuló `window.fetch` y se
+  pulsó "Reintentar". Nombre de 120 caracteres, cantidad 999 con stock 1 (bajó a 1 y el "+" quedó en el tope con el foco),
+  producto que pasó a stock 0 y otro con 404 (se quitaron con aviso), `image: null` y foto rota (respaldo), precio 89900.5
+  ("$ 89.901"), 129 unidades ("99+"), JSON roto (carrito vacío, clave borrada) y `localStorage` bloqueado (funciona en
+  memoria, sin errores). Con la API real: id 999999 (404) y 999 unidades de un producto con stock 6. Todo se deshizo
+  (sin clave del carrito ni token de prueba). Solo teclado: abrir, cambiar cantidades, quitar, "Ir a pagar" y Escape; el
+  foco nunca sale del carrito y vuelve al ícono al cerrar.
+
+  Notas para otras fases:
+  - **Fase 6 (Checkout):** al recargar estando en `/checkout`, el carrito tarda un momento en traer nombre y precio de la
+    API y Checkout dice "vacío" mientras tanto (y para siempre si la API no responde). Usar `estadoCarrito`
+    ("cargando" / "listo" / "error") y `reintentarCarrito` de `useCart`. También cambiar `formatPrice` por `formatearPrecio`.
+  - **Fase 9 (cuenta):** `html:has(dialog[open])` en `animations.css` ya bloquea el desplazamiento de la página para
+    cualquier `<dialog>`; `CartModal.jsx` sirve de modelo (salida con clase "cerrando" + `onCancel` para Escape).
+  - **Header, aviso de "cierre de sesión sin confirmar":** usa `toast-enter` (entra deslizándose), un tercer movimiento que
+    §3.4 no tiene. No se tocó (en el Header solo se permitía el pulso). Decidir en la Fase 12.
+  - **`api.js`:** `apiFetch` lee el token de `localStorage` sin `try/catch`. Si el navegador bloquea `localStorage` de
+    verdad, todas las llamadas a la API fallan (el carrito ya lo aguanta). Fuera de esta fase.
+  - **Pestañas:** el carrito no se sincroniza entre dos pestañas abiertas a la vez (cada una guarda lo suyo; gana la última).
+  - **Por confirmar a la vista:** la captura del navegador integrado no siempre pinta el fondo oscuro del `<dialog>`
+    (`::backdrop`), aunque su color calculado es el correcto. "Reducir movimiento" no se puede emular en ese navegador: se
+    comprobaron las reglas CSS cargadas, falta verlo con el ajuste del sistema.
 
 ### Fase 6 — Checkout · rama `rediseno-front-fase-6-checkout` · 🟢
 - [ ] 6.1 Tokens, resumen que aguanta nombres largos (#25), enlaces en vez de botones (#37), "Finalizar compra" (#38), `noindex`

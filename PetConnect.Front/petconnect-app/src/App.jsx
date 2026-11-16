@@ -3,6 +3,7 @@ import { Routes, Route, useLocation } from "react-router-dom";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import CartModal from "./components/CartModal";
+import AvisoCarrito from "./components/AvisoCarrito";
 import LoginModal from "./components/LoginModal";
 import EstadoCarga from "./components/EstadoCarga";
 import ZonaDeError from "./components/ZonaDeError";
@@ -81,6 +82,7 @@ export default function App() {
       </div>
       <Footer />
       <CartModal />
+      <AvisoCarrito />
       <LoginModal />
       {registroCargado && (
         <ZonaDeError ruta={pathname} respaldo={showRegister ? avisoRegistroFallido : null}>
