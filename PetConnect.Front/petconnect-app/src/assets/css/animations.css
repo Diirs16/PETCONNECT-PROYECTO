@@ -2,21 +2,13 @@
 /* Fase 1 del rediseño (§3.4 del reporte de diseño): menos movimiento y con
    propósito. Se borraron las animaciones que nadie usaba (float, pulse,
    bounceIn, shimmer, menú móvil, scroll-reveal lateral y de escala).
+   En la Fase 7 se borró lo que solo usaba Adopción: scroll-reveal, stagger-*,
+   hero-title, hero-subtitle, fadeInUp, card-hover, img-zoom y link-animate
+   (junto con useScrollReveal.js y scrollReveal.js).
    Las que quedan las usan otras páginas y se revisan en su fase.
    Al final está el bloque de "reducir movimiento" (#12). */
 
 /* --- Keyframes --- */
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
 
 @keyframes fadeInRight {
   from {
@@ -45,29 +37,6 @@
   }
 }
 
-/* --- Scroll Reveal (usado en Catálogo y Adopción) --- */
-/* El estado oculto solo existe si la persona NO pidió reducir movimiento.
-   Con "reducir movimiento", las tarjetas se ven desde el principio. */
-
-@media (prefers-reduced-motion: no-preference) {
-  .scroll-reveal {
-    opacity: 0;
-    transform: translateY(30px);
-    transition: opacity 0.6s ease-out, transform 0.6s ease-out;
-  }
-
-  .scroll-reveal.revealed {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Retrasos escalonados para rejillas */
-.stagger-1 { transition-delay: 0.1s; }
-.stagger-2 { transition-delay: 0.2s; }
-.stagger-3 { transition-delay: 0.3s; }
-.stagger-4 { transition-delay: 0.4s; }
-
 /* --- Animaciones de componentes --- */
 
 /* Fondo oscuro de modales */
@@ -80,23 +49,10 @@
   animation: scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* Títulos de Adopción (se quitan en la Fase 7, §3.4) */
-.hero-title {
-  animation: fadeInUp 0.8s ease-out forwards;
-}
-
-.hero-subtitle {
-  animation: fadeInUp 0.8s ease-out 0.15s both;
-}
-
 /* --- Efectos al pasar el mouse --- */
 /* Las reglas :hover van dentro de (hover: hover) and (pointer: fine): en el
    celular no hay mouse y la tarjeta se quedaba "levantada" después de
    tocarla (#24). */
-
-.card-hover {
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
 
 .btn-hover {
   position: relative;
@@ -113,46 +69,12 @@
    respuesta al presionar es la utilidad "presionable" de index.css. LoginModal
    (Fase 9) todavía lleva la clase vieja de la onda, sin efecto. */
 
-.img-zoom {
-  overflow: hidden;
-}
-
-.img-zoom img {
-  transition: transform 0.4s ease;
-}
-
-.link-animate {
-  position: relative;
-}
-
-.link-animate::after {
-  content: '';
-  position: absolute;
-  bottom: -2px;
-  left: 0;
-  width: 0;
-  height: 2px;
-  background: currentColor;
-  transition: width 0.3s ease;
-}
-
+/* Fase 7: se borraron card-hover, img-zoom y link-animate (solo los usaba
+   Adopción; su tarjeta ya no sube ni hace zoom). btn-hover queda por LoginModal. */
 @media (hover: hover) and (pointer: fine) {
-  .card-hover:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
-  }
-
   .btn-hover:hover {
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  }
-
-  .img-zoom:hover img {
-    transform: scale(1.05);
-  }
-
-  .link-animate:hover::after {
-    width: 100%;
   }
 }
 
@@ -242,29 +164,14 @@ html:has(dialog[open]) {
 
 @media (prefers-reduced-motion: reduce) {
   .page-enter,
-  .hero-title,
-  .hero-subtitle,
   .modal-enter,
   .backdrop-fade,
   .toast-enter {
     animation: fadeIn 150ms ease-out both;
   }
 
-  .card-hover:hover,
   .btn-hover:hover,
-  .btn-hover:active,
-  .img-zoom:hover img {
+  .btn-hover:active {
     transform: none;
-  }
-
-  .stagger-1,
-  .stagger-2,
-  .stagger-3,
-  .stagger-4 {
-    transition-delay: 0s;
-  }
-
-  .link-animate::after {
-    transition: none;
   }
 }
