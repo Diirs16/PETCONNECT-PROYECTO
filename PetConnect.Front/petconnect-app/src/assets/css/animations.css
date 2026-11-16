@@ -150,6 +150,26 @@ html:has(dialog[open]) {
   }
 }
 
+/* --- Celebración de la solicitud de adopción (Fase 8, §3.4 #5) --- */
+/* Único momento de "alegría" de la web: es raro y emotivo. Al llegar el 201,
+   el ícono de check crece de 0,8 a 1 con un resorte suave (400 ms; la curva se
+   pasa un poco de 1 y vuelve) y el texto aparece con un fundido de 200 ms.
+   Solo en adopción (FormularioSolicitud.jsx), no en contacto (D8.5).
+   Con "reducir movimiento" no hay regla: el mensaje solo aparece (D8.6).
+   Descartado linear(): el resorte de cubic-bezier basta y lo entiende todo navegador. */
+@keyframes celebracion-icono {
+  from { transform: scale(0.8); }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .celebracion-icono {
+    animation: celebracion-icono 400ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .celebracion-texto {
+    animation: fadeIn 200ms var(--ease-out);
+  }
+}
+
 /* --- Aviso de cierre de sesión sin confirmar (Header.jsx, ítem 4.13) --- */
 /* El aviso "agregado al carrito" ya no usa clases: es AvisoCarrito.jsx (Fase 5). */
 
