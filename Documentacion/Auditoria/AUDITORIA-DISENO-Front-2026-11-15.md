@@ -615,8 +615,58 @@ comunidad (RF07), diario de salud (RF08), GPS (RF10) y compra real (RF11). **El 
   - **Buscador o filtro de Adopción:** necesita `?especie=` en `/api/mascotas/adopcion` (Backend) antes de hacerlo en el Front.
 
 ### Fase 8 — Ficha de mascota · rama `rediseno-front-fase-8-ficha-mascota` · 🟡
-- [ ] 8.1 PetDetail como "expediente": nombre largo con `flex-wrap`, descripción con saltos (#26), foto de respaldo
-- [ ] 8.2 `FormularioSolicitud` con tokens (sin cambiar su lógica) y celebración sutil al enviar (§3.4 #5)
+- [x] 8.1 PetDetail como "expediente": nombre largo con `flex-wrap`, descripción con saltos (#26), foto de respaldo
+  (#27), "Solicitar adopción" (#38), pestaña y descripción (§3.6), arreglo de "pedida" y foco tras "Reintentar"
+- [x] 8.2 `FormularioSolicitud` con tokens (sin cambiar su lógica ni sus textos), foco al abrir y al cerrar, `CORREO_ATENCION`
+- [x] 8.3 Celebración sutil al enviar una solicitud de adopción (§3.4 #5), solo sin "reducir movimiento"
+- *Listo cuando:* una mascota con nombre de 80 caracteres, sin foto y con descripción de varios párrafos se ve bien a
+  320 px, la solicitud se envía solo con teclado, la celebración respeta "reducir movimiento" y Contacto no se rompe.
+- *Hecha el 16/11/2026, pendiente de tu aprobación.* Revisada en el navegador integrado a 320, 375 y 1280 px con la API
+  encendida. Lint 0 errores (queda el aviso de `AuthContext`, Fase 9), build y 142 pruebas pasan. Ningún `gray-*`, `black`,
+  `white`, `amber-*`, `green-*`, `red-*` ni hex en `PetDetail.jsx` y `FormularioSolicitud.jsx`. `impeccable detect` en
+  `/adopcion/3` (1280 y 375 px): solo el fondo crema (dirección A aprobada); en los archivos, 0 y un aviso sobre la curva con
+  rebote de la celebración (es la aprobada en D8.6). Decisiones aprobadas:
+  - **D8.1 Expediente:** especie en etiqueta terracota junto al nombre; raza, edad y sexo en un `<dl>` dentro de un recuadro,
+    una fila por dato. Sin ningún rasgo conocido no hay recuadro; nunca "Desconocido".
+  - **D8.2** `iconoEspecie` vive en `src/components/iconoEspecie.js`; `TarjetaMascota.jsx` solo cambió su import.
+  - **D8.3 Orden:** foto, nombre + especie, expediente, botón y descripción. Foto cuadrada en el celular, 4:5 y fija
+    (`sticky`) desde 768 px.
+  - **D8.4 Foco:** al abrir, el foco va al título del formulario (o a "Inicia sesión para enviar" sin sesión); al pulsar
+    "Cerrar" vuelve a "Solicitar adopción". Si llega otra ficha, el formulario se cierra solo. Se guarda la *respuesta* para
+    la que se abrió (no solo el `id`): así también se cierra al volver a la misma mascota con Atrás/Adelante (A → B → A).
+  - **D8.5** Botón principal terracota en adopción y turquesa en contacto; la celebración solo en adopción.
+  - **D8.6** Check de `scale(0.8)` a 1 en 400 ms con `cubic-bezier(0.34, 1.56, 0.64, 1)` y texto con fundido de 200 ms,
+    solo dentro de `prefers-reduced-motion: no-preference`.
+  - **D8.7** `FormularioSolicitud` usa `CORREO_ATENCION` de `utils/contacto.js`.
+  - **D8.8 y D8.9** Pestaña "{Nombre}, {especie} en adopción · PetConnect" y descripción `resumir(descripción, 150)` o
+    "Datos de {nombre} y solicitud de adopción."; estados con su propio título y `noindex` en "no encontrada".
+  Peores datos simulados cambiando `window.fetch` en la pestaña sobre `/api/mascotas/:id` (sin tocar BD ni archivos):
+  nombre de 80 caracteres con y sin espacios, raza larga, `image: null`, foto rota, especie "Conejo", `null`, "perra" y
+  "GATA" (ícono de perro, gato o huella), edad `null`, 0, 1 y 25, sexo "no_definido", ningún rasgo (sin recuadro),
+  descripción vacía, `null`, con saltos y de 2.000 caracteres, 404 (con `noindex`), 503 con "Reintentar" (con Enter: el foco
+  espera en el `<main>` y pasa al nombre al cargar) y cambio de una ficha a otra con el formulario abierto. Nada desborda a
+  320 px. Formulario: sin sesión, "Inicia sesión para enviar", "Crear cuenta" y "Cerrar". Con sesión **simulada** (no había
+  sesión de prueba: usuario inventado en `localStorage` y un token con "€" que el navegador no deja enviar, así nada llegó a
+  la API) y `POST /api/solicitudes/adopcion` simulado: 201 (celebración, foco en "Solicitud enviada"), 401 y 403 ("Volver a
+  iniciar sesión"), 500 y sin conexión; en todos el texto escrito se conserva y el foco va al aviso. Todo solo con teclado.
+  Al final se borraron las dos claves (`localStorage` quedó vacío, como al empezar) y se recargó. "Reducir movimiento" no se
+  puede emular en el navegador integrado ni con la herramienta de DevTools disponible: se comprobó que las reglas de la
+  celebración solo existen dentro de `no-preference`. Arreglo que salió al probar:
+  - A 320 px "Enviar solicitud" se partía en dos renglones al lado de "Cerrar"; ahora va en un renglón (`whitespace-nowrap`)
+    y "Cerrar" baja.
+
+  Notas para otras fases:
+  - **Fase 10 (Contacto):** la página queda mezclada hasta su fase: el formulario ya está en tokens (botón turquesa) y el
+    resto sigue en grises. `Contact.jsx` todavía tiene su propia copia de `CORREO_ATENCION` y su comentario nombra
+    `FormularioSolicitud.jsx` como copia (ya no lo es).
+  - **Fase 9 (cuenta):** `LoginModal.jsx` sigue con su copia del correo; al pasarlo a `<dialog>`, comprobar que al volver
+    del inicio de sesión abierto desde "Inicia sesión para enviar" el foco regrese al formulario.
+  - **Lógica (sin cambiar, decidir aparte):** tras enviar, "Cerrar" vuelve a mostrar "Solicitar adopción" y se podría
+    mandar otra solicitud para la misma mascota. Cambiarlo es cambiar la lógica (y quizá la API, que es quien sabe si ya hay
+    una solicitud).
+  - **Contenido:** la descripción de las mascotas del *seed* (por ejemplo, "Vacunada, esterilizada y desparasitada") sale tal
+    cual de la BD; ya está marcada con `# REVISAR-VETERINARIO` en `seed.py`.
+  - **`datosMascota`** (`utils/mascota.js`) ya no lo usa ninguna página (solo sus pruebas); decidir en la Fase 12 si se borra.
 
 ### Fase 9 — Cuenta (inicio de sesión y registro) · rama `rediseno-front-fase-9-cuenta` · 🔴
 - [ ] 9.1 `LoginModal` y `RegisterModal` como `<dialog>` (#1), campos de 16 px con borde visible (#14, #15), `autoComplete` (#16), etiqueta del código (#9), spinner `motion-safe` (#43)

@@ -1,8 +1,8 @@
-import { Cat, Dog, Heart, PawPrint } from "lucide-react";
+import { Heart } from "lucide-react";
 import { Link } from "react-router-dom";
 import FotoConRespaldo from "./FotoConRespaldo";
+import { iconoEspecie } from "./iconoEspecie";
 import { rasgosMascota } from "../utils/mascota";
-import { normalizarTexto } from "../utils/texto";
 
 // Fase 7 del rediseño: tarjeta de una mascota en adopción (§4.2 punto 4).
 // Antes era casi igual a la de producto: la mascota se veía como una bolsa de
@@ -14,14 +14,7 @@ import { normalizarTexto } from "../utils/texto";
 //     en etiquetas aparte, no en una línea con " · ".
 //   - "Conocer más" es terracota (acento); el botón de producto es turquesa.
 // Solo se muestra lo que manda la API: nada de vacunas, tamaño ni esterilización.
-
-/** Ícono del respaldo según la especie ("perro", "Perra", "GATO", "gatito"…). */
-function iconoEspecie(especie) {
-  const nombre = normalizarTexto(especie).trim();
-  if (nombre.startsWith("perr")) return Dog;
-  if (nombre.startsWith("gat")) return Cat;
-  return PawPrint; // otra especie, o la API no la mandó
-}
+// El ícono por especie (sin foto) está en iconoEspecie.js desde la Fase 8.
 
 export default function TarjetaMascota({ pet }) {
   const enlace = `/adopcion/${pet.id}`;
