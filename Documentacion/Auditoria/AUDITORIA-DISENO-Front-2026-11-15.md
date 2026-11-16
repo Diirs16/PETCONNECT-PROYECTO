@@ -573,7 +573,46 @@ comunidad (RF07), diario de salud (RF08), GPS (RF10) y compra real (RF11). **El 
     Fuera de esta fase.
 
 ### Fase 7 — Adopción (lista) · rama `rediseno-front-fase-7-adopcion` · 🟡
-- [ ] 7.1 Tarjeta de mascota propia (distinta a la de producto), etiquetas de rasgos, foto de respaldo, sin animación de título (§3.4)
+- [x] 7.1 Tarjeta de mascota propia (distinta a la de producto), etiquetas de rasgos, foto de respaldo, sin animación de título (§3.4)
+- [x] 7.2 `Adoption.jsx` con tokens, título "Mascotas en adopción" (#38), pestaña y descripción (§3.6), sin `useScrollReveal`
+- [x] 7.3 Limpieza: borrados `useScrollReveal.js`, `scrollReveal.js` y, en `animations.css`, `scroll-reveal`, `stagger-*`,
+  `hero-title`, `hero-subtitle`, `fadeInUp`, `card-hover`, `img-zoom` y `link-animate` (#12, #20). `btn-hover` queda (LoginModal)
+- *Listo cuando:* una mascota con nombre de 80 caracteres y sin foto se ve bien a 320 px, la tarjeta de mascota ya no se
+  confunde con la de producto y no queda animación de título ni de scroll en Adopción.
+- *Hecha el 16/11/2026, pendiente de tu aprobación.* Revisada en el navegador integrado a 320, 375 y 1280 px con la API
+  encendida. Lint 0 errores (queda el aviso de `AuthContext`, Fase 9), build y 142 pruebas pasan (3 nuevas de
+  `rasgosMascota` en `tests/mascota.test.js`). Ningún `gray-*`, `black`, `white`, `amber-*` ni hex en `Adoption.jsx` y
+  `TarjetaMascota.jsx`; las clases borradas solo aparecen en comentarios. `impeccable detect` en `/adopcion` (1280 y 375 px):
+  solo el fondo crema (dirección A aprobada). Decisiones aprobadas:
+  - **D7.1 Tarjeta:** `src/components/TarjetaMascota.jsx`. Foto vertical 4:5 a todo el ancho (también en celular), nombre
+    `h2` en `font-display`, especie en etiqueta terracota (`acento-claro` / `acento-oscuro`, 6,26:1), rasgos en etiquetas
+    (`tinta-suave` sobre `papel`, 5,82:1) y "Conocer más" terracota (blanco sobre `acento`, 4,99:1). Enlaces: nombre y botón;
+    la foto lleva al mismo lugar pero con `tabIndex -1` y `aria-hidden` (como `ProductCard`). Rejilla de 1, 2, 3 y 4 columnas
+    (640, 1024 y 1280 px).
+  - **D7.2 Rasgos:** `rasgosMascota(pet)` en `utils/mascota.js` devuelve la lista; `datosMascota` ahora es
+    `rasgosMascota(pet).join(" · ")` (mismo resultado, PetDetail no cambia). Sin rasgos conocidos no se dibuja la lista.
+  - **D7.3 Sin foto:** ícono según la especie (`Dog` si empieza por "perr", `Cat` si empieza por "gat", sin importar
+    tildes ni mayúsculas; `PawPrint` para otra especie o ninguna), tono "acento".
+  - **D7.4 Limpieza:** hecha (7.3).
+  - **D7.5 Foco de `BotonVerMas`:** se deja para la Fase 12 (cambia también el Catálogo).
+  - **D7.6 Filtro por especie:** no por ahora. La lista va de 12 en 12 y filtrar solo lo cargado engañaría; hacerlo bien
+    necesita `?especie=` en la API (Backend).
+  Peores datos simulados cambiando `window.fetch` en la pestaña solo para `/api/mascotas/adopcion` (sin tocar BD ni
+  archivos; se quitó al recargar y `localStorage` quedó vacío): nombre de 80 caracteres (2 líneas + `title`), nombre de 80
+  letras sin espacios (se corta sin desbordar), raza de 80 (la etiqueta pasa a varias líneas), `image: null`, foto rota,
+  especie "Conejo", `null`, "perra" y "GATA", edad `null`, 0, 1 y 25, sexo "no_definido", ninguna característica conocida
+  (sin renglón vacío), una sola mascota (sin "Ver más"), lista vacía, error con "Reintentar" y error en "Ver más" (las 12 se
+  quedan y sale el aviso). Nada desborda a 320 px. Solo teclado: por tarjeta, nombre y "Conocer más" (la foto no recibe
+  Tab), "Reintentar" y "Ver más mascotas", con foco visible. Arreglo que salió al probar:
+  - Al pulsar "Reintentar" el foco caía al `<body>`; ahora va al título "Mascotas en adopción" (igual que Checkout).
+
+  Notas para otras fases:
+  - **Fase 8 (PetDetail):** reusar `rasgosMascota` para las etiquetas del "expediente" y el mismo ícono por especie (hoy
+    `iconoEspecie` vive dentro de `TarjetaMascota.jsx`; si PetDetail lo necesita, moverlo a un archivo propio en
+    `src/components/` y exportarlo). Usar `FotoConRespaldo` con `tono="acento"` y `alt` con el nombre. La especie llega
+    como la escribió el refugio ("perra", "GATA"): se muestra tal cual, no se corrige.
+  - **Fase 12 (`BotonVerMas`):** confirmado otra vez en Adopción: tras "Ver más" con teclado el foco cae al `<body>`.
+  - **Buscador o filtro de Adopción:** necesita `?especie=` en `/api/mascotas/adopcion` (Backend) antes de hacerlo en el Front.
 
 ### Fase 8 — Ficha de mascota · rama `rediseno-front-fase-8-ficha-mascota` · 🟡
 - [ ] 8.1 PetDetail como "expediente": nombre largo con `flex-wrap`, descripción con saltos (#26), foto de respaldo
