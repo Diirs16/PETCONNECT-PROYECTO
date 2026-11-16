@@ -1,18 +1,39 @@
 import { useState, useRef } from "react";
-import { X } from "lucide-react";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/useAuth";
 import CasillaAutorizacion from "./CasillaAutorizacion";
+import DialogoCuenta from "./DialogoCuenta";
+import { CORREO_ATENCION } from "../utils/contacto";
 
 // Ítem 3.5 (A-20, R05): las cuentas sin autorización vigente (creadas antes del 3.1
 // o que aceptaron otra versión de la política) deben marcar la casilla para entrar.
 // Textos de B.3 en Documentacion/Legal/POLITICA-TRATAMIENTO-DATOS-v1.0-BORRADOR.md.
 const MENSAJE_SIN_AUTORIZACION = "Para continuar debes autorizar el tratamiento de tus datos personales.";
-// Correo de atención del proyecto (D.1); el mismo de PoliticaDatos.jsx y AvisoDemo.jsx
-const CORREO_ATENCION = "proyectopetconnect+atencion@gmail.com";
+
+// Fase 9 del rediseño: la ventana es un <dialog> (DialogoCuenta.jsx) con tres pasos
+// (entrar, código y autorización). Colores de los tokens (index.css), campos de
+// 16 px con borde borde-fuerte (#14, #15), autoComplete (#16) y el código con su
+// etiqueta (#9). La lógica y los mensajes no cambian. Mismas clases en RegisterModal.
+const ETIQUETA = "mb-1.5 block text-sm font-semibold text-tinta";
+const CAMPO =
+  "block w-full rounded-control border border-borde-fuerte bg-superficie px-3 py-2.5 text-tinta caret-marca placeholder:text-tinta-suave focus:outline-2 focus:outline-offset-1 focus:outline-marca";
+const CAMPO_CODIGO = `${CAMPO} text-center text-2xl font-semibold tracking-widest tabular-nums`;
+const BOTON_PRINCIPAL =
+  "presionable inline-flex min-h-11 w-full items-center justify-center rounded-control bg-marca px-5 text-base font-semibold text-superficie enabled:hover:bg-marca-hover disabled:cursor-not-allowed disabled:opacity-60";
+const BOTON_SECUNDARIO =
+  "presionable inline-flex min-h-11 w-full items-center justify-center rounded-control border border-borde-fuerte bg-superficie px-5 text-base font-semibold text-tinta enabled:hover:border-marca enabled:hover:text-marca disabled:cursor-not-allowed disabled:opacity-60";
+const ENLACE = "font-semibold text-marca underline underline-offset-2 hover:text-marca-hover";
+const ERROR = "mb-4 rounded-control border border-error/40 bg-superficie px-3 py-2 text-base text-error";
+
+const TITULOS = {
+  entrar: "Iniciar sesión",
+  codigo: "Verificar inicio de sesión",
+  autorizacion: "Autoriza el uso de tus datos",
+};
 
 export default function LoginModal() {
   const {
     showLogin,
+    showRegister,
     setShowLogin,
     login,
     verifyLoginCode,
@@ -32,7 +53,8 @@ export default function LoginModal() {
   const [aceptaDatos, setAceptaDatos] = useState(false);   // empieza SIN marcar
   const aceptaRef = useRef(null);
 
-  if (!showLogin) return null;
+  // Mismo orden de antes: primero el código, después la autorización
+  const paso = pendingLoginEmail ? "codigo" : avisoAutorizacion ? "autorizacion" : "entrar";
 
   // La API pidió la autorización: se muestra la casilla sin marcar. El correo y
   // la contraseña siguen en el estado para repetir el inicio de sesión con ella.
@@ -107,224 +129,177 @@ export default function LoginModal() {
     }
   };
 
-  const handleClose = () => {
+  // D9.3: al cerrar de cualquier forma (X, Escape, fondo, al entrar o al pasar a
+  // Crear cuenta) se conserva el correo y se olvidan la contraseña, el código y
+  // el paso de autorización.
+  const alCerrar = () => {
     setShowLogin(false);
     setPendingLoginEmail(null);
     setCode("");
+    setPassword("");
+    setAvisoAutorizacion("");
+    setAceptaDatos(false);
   };
 
-  const handleCloseAutorizacion = () => {
-    salirDeAutorizacion();
-    setShowLogin(false);
-  };
-
-  if (pendingLoginEmail) {
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div className="absolute inset-0 bg-black/40 backdrop-fade" onClick={handleClose} />
-        <div className="modal-enter relative bg-white rounded-xl shadow-xl w-full max-w-sm p-6">
-          <button
-            onClick={handleClose}
-            className="absolute top-4 right-4 p-1 hover:bg-gray-100 rounded-full"
-            aria-label="Cerrar"
-          >
-            <X className="w-5 h-5" />
-          </button>
-
-          <h2 className="text-xl font-bold mb-2 text-center">Verificar inicio de sesión</h2>
-          <p className="text-sm text-gray-500 text-center mb-6">
+  return (
+    <DialogoCuenta
+      abierto={showLogin}
+      paso={paso}
+      titulo={TITULOS[paso]}
+      idTitulo="login-titulo"
+      enfocarTitulo={paso === "autorizacion"}
+      etiquetaCerrar="Cerrar inicio de sesión"
+      cambiando={showRegister}
+      alCerrar={alCerrar}
+    >
+      {paso === "codigo" && (
+        <>
+          <p id="login-codigo-ayuda" className="mb-5 text-base text-tinta-suave">
             Ingresa el código de 6 dígitos que enviamos a{" "}
-            <span className="font-medium text-gray-800">{pendingLoginEmail}</span>
+            <span className="font-semibold break-all text-tinta">{pendingLoginEmail}</span>
           </p>
 
           {authError && (
-            <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2 mb-4 text-center">
+            <p role="alert" className={ERROR}>
               {authError}
             </p>
           )}
 
           <form onSubmit={handleVerify} className="space-y-4">
-            <input
-              type="text"
-              inputMode="numeric"
-              maxLength={6}
-              value={code}
-              onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
-              required
-              autoFocus
-              className="w-full px-3 py-3 border border-gray-300 rounded-lg text-center text-2xl font-bold tracking-widest focus:outline-none focus:border-black"
-              placeholder="------"
-            />
+            <div>
+              <label htmlFor="login-codigo" className={ETIQUETA}>
+                Código de verificación
+              </label>
+              <input
+                id="login-codigo"
+                type="text"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                maxLength={6}
+                value={code}
+                onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
+                required
+                data-autofoco
+                aria-describedby="login-codigo-ayuda"
+                className={CAMPO_CODIGO}
+                placeholder="------"
+              />
+            </div>
 
-            <button
-              type="submit"
-              disabled={loading || code.length !== 6}
-              className="w-full bg-black text-white py-2.5 rounded-lg font-medium hover:bg-gray-800 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
-            >
-              {loading ? "Verificando..." : "Confirmar código"}
+            <button type="submit" disabled={loading || code.length !== 6} className={BOTON_PRINCIPAL}>
+              {loading ? "Verificando…" : "Confirmar código"}
             </button>
           </form>
 
-          <p className="text-center text-sm text-gray-500 mt-4">
+          <p className="mt-5 text-sm text-tinta-suave">
             ¿No recibiste el código?{" "}
             <button
+              type="button"
               onClick={() => { setAuthError(null); setPendingLoginEmail(null); setCode(""); }}
-              className="text-black font-medium hover:underline"
+              className={ENLACE}
             >
               Volver e intentar de nuevo
             </button>
           </p>
-        </div>
-      </div>
-    );
-  }
+        </>
+      )}
 
-  if (avisoAutorizacion) {
-    return (
-      // overflow-y-auto + min-h-full: a 375 px el paso es alto y debe poder desplazarse
-      <div className="fixed inset-0 z-50 overflow-y-auto">
-        <div className="fixed inset-0 bg-black/40 backdrop-fade" onClick={handleCloseAutorizacion} />
-        <div
-          className="relative flex min-h-full items-center justify-center p-4"
-          onClick={(e) => e.target === e.currentTarget && handleCloseAutorizacion()}
-        >
-          <div className="modal-enter relative bg-white rounded-xl shadow-xl w-full max-w-sm p-6">
-            <button
-              onClick={handleCloseAutorizacion}
-              className="absolute top-4 right-4 p-1 hover:bg-gray-100 rounded-full"
-              aria-label="Cerrar"
-            >
-              <X className="w-5 h-5" />
-            </button>
+      {paso === "autorizacion" && (
+        <>
+          {/* Mensaje del 403 de la API (B.3) */}
+          <p className="mb-5 text-base text-tinta-suave">{avisoAutorizacion}</p>
 
-            <h2 className="text-xl font-bold mb-2 text-center">Autoriza el uso de tus datos</h2>
-            {/* Mensaje del 403 de la API (B.3) */}
-            <p className="text-sm text-gray-600 text-center mb-6">{avisoAutorizacion}</p>
-
-            {authError && (
-              <p role="alert" className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2 mb-4 text-center">
-                {authError}
-              </p>
-            )}
-
-            <form onSubmit={handleAutorizar} className="space-y-4">
-              <CasillaAutorizacion
-                ref={aceptaRef}
-                id="login-acepta"
-                name="aceptaDatos"
-                checked={aceptaDatos}
-                onChange={(e) => setAceptaDatos(e.target.checked)}
-              />
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-black text-white py-2.5 rounded-lg font-medium hover:bg-gray-800 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
-              >
-                {loading ? "Enviando código..." : "Autorizar y continuar"}
-              </button>
-              {/* Desactivado mientras se envía: si se cancelara a mitad de la petición,
-                  al llegar la respuesta igual saldría la pantalla del código. */}
-              <button
-                type="button"
-                onClick={salirDeAutorizacion}
-                disabled={loading}
-                className="w-full min-h-11 border border-gray-300 bg-white text-black py-2.5 rounded-lg text-sm font-medium transition-colors hover:bg-gray-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black disabled:text-gray-400 disabled:hover:bg-white disabled:cursor-not-allowed"
-              >
-                Cancelar
-              </button>
-            </form>
-
-            {/* B.3: si no autoriza, puede pedir que se borre su cuenta (proceso manual, C.8) */}
-            <p className="mt-5 pt-4 border-t border-gray-100 text-sm leading-relaxed text-gray-600">
-              Si no quieres autorizarlo, escríbenos a{" "}
-              <a
-                href={`mailto:${CORREO_ATENCION}`}
-                className="break-words font-medium text-black underline underline-offset-2 hover:text-gray-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
-              >
-                {CORREO_ATENCION}
-              </a>{" "}
-              y borraremos tu cuenta.
+          {authError && (
+            <p role="alert" className={ERROR}>
+              {authError}
             </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+          )}
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div
-        className="absolute inset-0 bg-black/40 backdrop-fade"
-        onClick={() => setShowLogin(false)}
-      />
-      <div className="modal-enter relative bg-white rounded-xl shadow-xl w-full max-w-sm p-6">
-        <button
-          onClick={() => setShowLogin(false)}
-          className="absolute top-4 right-4 p-1 hover:bg-gray-100 rounded-full"
-          aria-label="Cerrar"
-        >
-          <X className="w-5 h-5" />
-        </button>
+          <form onSubmit={handleAutorizar} className="space-y-4">
+            <CasillaAutorizacion
+              ref={aceptaRef}
+              id="login-acepta"
+              name="aceptaDatos"
+              checked={aceptaDatos}
+              onChange={(e) => setAceptaDatos(e.target.checked)}
+            />
 
-        <h2 className="text-xl font-bold mb-6 text-center">Iniciar Sesión</h2>
+            <button type="submit" disabled={loading} className={BOTON_PRINCIPAL}>
+              {loading ? "Enviando código…" : "Autorizar y continuar"}
+            </button>
+            {/* Desactivado mientras se envía: si se cancelara a mitad de la petición,
+                al llegar la respuesta igual saldría la pantalla del código. */}
+            <button type="button" onClick={salirDeAutorizacion} disabled={loading} className={BOTON_SECUNDARIO}>
+              Cancelar
+            </button>
+          </form>
 
-        {authError && (
-          <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2 mb-4 text-center">
-            {authError}
+          {/* B.3: si no autoriza, puede pedir que se borre su cuenta (proceso manual, C.8) */}
+          <p className="mt-5 border-t border-borde pt-4 text-sm leading-relaxed text-tinta-suave">
+            Si no quieres autorizarlo, escríbenos a{" "}
+            <a href={`mailto:${CORREO_ATENCION}`} className={`${ENLACE} break-all`}>
+              {CORREO_ATENCION}
+            </a>{" "}
+            y borraremos tu cuenta.
           </p>
-        )}
+        </>
+      )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label htmlFor="login-email" className="block text-sm font-medium mb-1">
-              Correo electrónico
-            </label>
-            <input
-              id="login-email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-black"
-              placeholder="tu@correo.com"
-            />
-          </div>
+      {paso === "entrar" && (
+        <>
+          {authError && (
+            <p role="alert" className={ERROR}>
+              {authError}
+            </p>
+          )}
 
-          <div>
-            <label htmlFor="login-password" className="block text-sm font-medium mb-1">
-              Contraseña
-            </label>
-            <input
-              id="login-password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-black"
-              placeholder="Tu contraseña"
-            />
-          </div>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label htmlFor="login-email" className={ETIQUETA}>
+                Correo electrónico
+              </label>
+              <input
+                id="login-email"
+                type="email"
+                autoComplete="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                data-autofoco
+                className={`${CAMPO} text-base`}
+                placeholder="tu@correo.com"
+              />
+            </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="btn-hover btn-ripple w-full bg-black text-white py-2.5 rounded-lg font-medium hover:bg-gray-800 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
-          >
-            {loading ? "Iniciando sesión..." : "Iniciar Sesión"}
-          </button>
-        </form>
+            <div>
+              <label htmlFor="login-password" className={ETIQUETA}>
+                Contraseña
+              </label>
+              <input
+                id="login-password"
+                type="password"
+                autoComplete="current-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className={`${CAMPO} text-base`}
+                placeholder="Tu contraseña"
+              />
+            </div>
 
-        <p className="text-center text-sm text-gray-500 mt-4">
-          ¿No tienes cuenta?{" "}
-          <button
-            onClick={openRegister}
-            className="text-black font-medium hover:underline"
-          >
-            Regístrate
-          </button>
-        </p>
-      </div>
-    </div>
+            <button type="submit" disabled={loading} className={BOTON_PRINCIPAL}>
+              {loading ? "Iniciando sesión…" : "Iniciar sesión"}
+            </button>
+          </form>
+
+          <p className="mt-5 text-sm text-tinta-suave">
+            ¿No tienes cuenta?{" "}
+            <button type="button" onClick={openRegister} className={ENLACE}>
+              Regístrate
+            </button>
+          </p>
+        </>
+      )}
+    </DialogoCuenta>
   );
 }

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { CheckCircle, Send } from "lucide-react";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/useAuth";
 import { enviarMensajeContacto, enviarSolicitudAdopcion } from "../services/api";
 import { MENSAJE_MAX, MENSAJE_MIN, validarMensaje, validarTelefono } from "../utils/solicitud";
 import { CORREO_ATENCION } from "../utils/contacto";
@@ -131,11 +131,20 @@ export default function FormularioSolicitud({ tipo, mascota, onCerrar, enfocarAl
             : "Para enviarnos un mensaje desde aquí necesitas iniciar sesión."}{" "}
           Usaremos el nombre y el correo de tu cuenta.
         </p>
+        {/* Fase 9 (D9.3): al entrar, estos botones cambian por el formulario; el foco
+            va a su título (data-foco-respaldo, ver DialogoCuenta.jsx) */}
         <div className="flex flex-wrap gap-3">
-          <button ref={iniciarSesionRef} type="button" onClick={openLogin} className={BOTON_PRINCIPAL}>
+          <button
+            ref={iniciarSesionRef}
+            id={id("iniciar-sesion")}
+            type="button"
+            onClick={openLogin}
+            data-foco-respaldo={id("titulo")}
+            className={BOTON_PRINCIPAL}
+          >
             Inicia sesión para enviar
           </button>
-          <button type="button" onClick={openRegister} className={BOTON_SECUNDARIO}>
+          <button type="button" onClick={openRegister} data-foco-respaldo={id("titulo")} className={BOTON_SECUNDARIO}>
             Crear cuenta
           </button>
           {onCerrar && (
@@ -183,7 +192,7 @@ export default function FormularioSolicitud({ tipo, mascota, onCerrar, enfocarAl
   return (
     <form onSubmit={enviar} noValidate className="space-y-4 rounded-tarjeta border border-borde bg-superficie p-4 md:p-5">
       {/* tabIndex -1: recibe el foco al abrir (D8.4), pero no es un control (sin contorno) */}
-      <h3 ref={tituloRef} tabIndex={-1} className="break-words text-lg font-semibold text-tinta outline-none">
+      <h3 ref={tituloRef} id={id("titulo")} tabIndex={-1} className="break-words text-lg font-semibold text-tinta outline-none">
         {esAdopcion ? `Solicitud de adopción de ${mascota.name}` : "Escríbenos"}
       </h3>
 
@@ -271,7 +280,12 @@ export default function FormularioSolicitud({ tipo, mascota, onCerrar, enfocarAl
         >
           <p>{error}</p>
           {volverAEntrar && (
-            <button type="button" onClick={volverAIniciarSesion} className={BOTON_SECUNDARIO}>
+            <button
+              type="button"
+              onClick={volverAIniciarSesion}
+              data-foco-respaldo={`${id("titulo")} ${id("iniciar-sesion")}`}
+              className={BOTON_SECUNDARIO}
+            >
               Volver a iniciar sesión
             </button>
           )}

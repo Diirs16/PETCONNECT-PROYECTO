@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   cerrarSesionEnServidor,
   getPerfil,
@@ -8,8 +8,14 @@ import {
   verifyLoginCode as apiVerifyLoginCode,
 } from "../services/api";
 import { cerrarSesion, revalidarSesion } from "../utils/sesion";
+import { AuthContext } from "./useAuth";
 
-const AuthContext = createContext();
+// Fase 9 del rediseño (#32): el hook useAuth vive en useAuth.js y el valor del
+// contexto se memoriza (useMemo/useCallback). Antes era un objeto nuevo en cada
+// render y todo lo que usa useAuth se volvía a dibujar aunque nada cambiara.
+// Lo que hace cada función NO cambió: solo está envuelta en useCallback
+// (que guarda la misma función mientras no cambie lo que usa).
+
 const SESSION_KEY = "petconnect_session";
 const TOKEN_KEY   = "petconnect_token";
 
@@ -64,101 +70,114 @@ export function AuthProvider({ children }) {
     };
   }, []);
 
-  const _setUser = (userData, token) => {
+  const _setUser = useCallback((userData, token) => {
     setUser(userData);
     if (userData) saveSession(userData, token);
     else clearSession();
-  };
+  }, []);
 
   // aceptaDatos: solo true cuando la persona marcó la casilla de autorización
   // (ítem 3.5, cuentas sin autorización vigente). Si no, no se manda.
-  const login = async (email, password, aceptaDatos) => {
+  const login = useCallback(async (email, password, aceptaDatos) => {
     setAuthError(null);
     await loginUser(email, password, aceptaDatos);
     setPendingLoginEmail(email);
-  };
+  }, []);
 
-  const verifyLoginCode = async (email, code) => {
+  const verifyLoginCode = useCallback(async (email, code) => {
     setAuthError(null);
     const { token, ...userData } = await apiVerifyLoginCode(email, code);
     _setUser(userData, token);
     setPendingLoginEmail(null);
     setShowLogin(false);
-  };
+  }, [_setUser]);
 
-  const register = async (name, email, password, aceptaDatos) => {
+  const register = useCallback(async (name, email, password, aceptaDatos) => {
     setAuthError(null);
     await registerUser(name, email, password, aceptaDatos);
     setPendingEmail(email);
-  };
+  }, []);
 
-  const verifyCode = async (email, code) => {
+  const verifyCode = useCallback(async (email, code) => {
     setAuthError(null);
     const { token, ...userData } = await apiVerifyCode(email, code);
     _setUser(userData, token);
     setPendingEmail(null);
     setShowRegister(false);
-  };
+  }, [_setUser]);
 
   // Solo borra la sesión de este navegador (sin llamar a la API). Se usa cuando la
   // API ya dijo que el token no vale (401), p. ej. en FormularioSolicitud.jsx.
-  const cerrarSesionLocal = () => {
+  const cerrarSesionLocal = useCallback(() => {
     _setUser(null);
     setPendingEmail(null);
     setPendingLoginEmail(null);
-  };
+  }, [_setUser]);
 
   // Ítem 4.13 (A-03): botón "Cerrar sesión". Cierra en la API (todos los aparatos) y
   // siempre en este navegador. Devuelve "cerrada", "ya-cerrada" o "sin-confirmar"
   // (ver utils/sesion.js); con "sin-confirmar" el Header muestra un aviso.
-  const logout = () =>
+  const logout = useCallback(() =>
     cerrarSesion({
       leerToken: () => localStorage.getItem(TOKEN_KEY),
       cerrarEnServidor: cerrarSesionEnServidor,
       borrarLocal: cerrarSesionLocal,
-    });
+    }), [cerrarSesionLocal]);
 
-  const openLogin = () => {
+  const openLogin = useCallback(() => {
     setShowRegister(false);
     setShowLogin(true);
     setAuthError(null);
     setPendingLoginEmail(null);
-  };
+  }, []);
 
-  const openRegister = () => {
+  const openRegister = useCallback(() => {
     setShowLogin(false);
     setShowRegister(true);
     setAuthError(null);
     setPendingEmail(null);
-  };
+  }, []);
 
-  return (
-    <AuthContext.Provider
-      value={{
-        user,
-        showLogin,
-        showRegister,
-        authError,
-        setAuthError,
-        setShowLogin,
-        setShowRegister,
-        pendingEmail,
-        setPendingEmail,
-        pendingLoginEmail,
-        setPendingLoginEmail,
-        login,
-        verifyLoginCode,
-        register,
-        verifyCode,
-        logout,
-        cerrarSesionLocal,
-        openLogin,
-        openRegister,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
+  // Las funciones set… de useState nunca cambian: no hace falta ponerlas en la lista
+  const valor = useMemo(
+    () => ({
+      user,
+      showLogin,
+      showRegister,
+      authError,
+      setAuthError,
+      setShowLogin,
+      setShowRegister,
+      pendingEmail,
+      setPendingEmail,
+      pendingLoginEmail,
+      setPendingLoginEmail,
+      login,
+      verifyLoginCode,
+      register,
+      verifyCode,
+      logout,
+      cerrarSesionLocal,
+      openLogin,
+      openRegister,
+    }),
+    [
+      user,
+      showLogin,
+      showRegister,
+      authError,
+      pendingEmail,
+      pendingLoginEmail,
+      login,
+      verifyLoginCode,
+      register,
+      verifyCode,
+      logout,
+      cerrarSesionLocal,
+      openLogin,
+      openRegister,
+    ],
   );
-}
 
-export const useAuth = () => useContext(AuthContext);
+  return <AuthContext.Provider value={valor}>{children}</AuthContext.Provider>;
+}
