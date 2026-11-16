@@ -535,7 +535,42 @@ comunidad (RF07), diario de salud (RF08), GPS (RF10) y compra real (RF11). **El 
     comprobaron las reglas CSS cargadas, falta verlo con el ajuste del sistema.
 
 ### Fase 6 — Checkout · rama `rediseno-front-fase-6-checkout` · 🟢
-- [ ] 6.1 Tokens, resumen que aguanta nombres largos (#25), enlaces en vez de botones (#37), "Finalizar compra" (#38), `noindex`
+- [x] 6.1 Tokens, resumen que aguanta nombres largos (#25), enlaces en vez de botones (#37), "Finalizar compra" (#38), `noindex`
+- [x] 6.2 `AvisoDemo` con tokens (`aviso` / `aviso-claro`) y `CORREO_ATENCION` de `utils/contacto.js`, sin cambiar textos
+- *Listo cuando:* recargar en `/checkout` nunca dice "vacío" si hay productos guardados y un nombre de 120 caracteres no saca
+  el precio de la caja.
+- *Hecha el 16/11/2026, pendiente de tu aprobación.* Revisada en el navegador integrado a 320, 375 y 1280 px con la API
+  encendida. Lint 0 errores (queda el aviso de `AuthContext`, Fase 9), build y 139 pruebas pasan. `formatPrice` ya no existe
+  en el código (solo en un comentario de `precio.js`); ningún `gray-*`, `black`, `white` ni `amber-*` en los dos archivos.
+  `impeccable detect` en `/checkout` (1280 y 375 px): solo el fondo crema (dirección A aprobada). El escaneo por URL ve el
+  carrito vacío, así que con productos se midió a mano: texto ≥ 5,82:1, borde de campos y botón final 3,56:1, foco 5,58:1
+  sobre el aviso. Decisiones aprobadas:
+  - **D6.1 Estados:** "Cargando tu pedido…" mientras el carrito trae datos de la API; si falla, "No pudimos cargar tu
+    carrito" con Reintentar (principal) y "Ver catálogo" (con borde). Con error no se muestra un resumen a medias.
+    "Tu carrito está vacío" solo con `estadoCarrito` "listo" y sin productos. Tras "Reintentar" el foco pasa al título.
+  - **D6.2 Volver:** `<Link to="/catalogo">` "Volver al catálogo". Descartado "Editar carrito" (repite el ícono del Header).
+  - **D6.3 Orden:** resumen primero (arriba en celular, a la izquierda desde 1024 px); mismo orden visual y de lectura.
+  - **D6.4 Campos:** los 4 se quedan bloqueados (`fieldset disabled`), con 16 px (#14) y borde `borde-fuerte` (#15).
+  Peores datos (sin tocar BD ni archivos): token con "€" para que la carga fallara (error al recargar), luego se quitó, se
+  simuló `window.fetch` con 4 s de espera y se pulsó "Reintentar" con Enter (se vio "Cargando tu pedido…"). Nombre de 120
+  caracteres (2 líneas + `title`), precio 89900.5 ("$ 89.901"), precio `null` ("Precio no disponible" y "No incluye 1
+  producto sin precio."), 128 unidades ("128 unidades de $ 89.901", total "$ 11.553.164"), un solo producto (API real) y
+  carrito vacío. Nada desborda a 320 px. Solo teclado: "Volver al catálogo", "Reintentar" y "Ver catálogo" (vacío y error),
+  con foco visible. El `noindex` existe en `/checkout` y desaparece al ir a `/catalogo`. Todo se deshizo (sin clave del
+  carrito ni token de prueba). Arreglos que salieron al probar:
+  - Un precio `null` salía "$ 0" (`Number(null)` es 0); ahora sale "Precio no disponible".
+  - Al pulsar "Reintentar" el foco caía al `<body>`; ahora va al título "Finalizar compra".
+
+  Notas para otras fases:
+  - **`CartModal.jsx` (Fase 12):** tiene el mismo problema del precio `null`: calcula
+    `formatearPrecio(Number(item.price) * item.quantity)` y saldría "$ 0". Arreglo: calcular el subtotal solo si
+    `formatearPrecio(item.price)` no es `null`, como en `Checkout.jsx`.
+  - **`AvisoDemo` solo lo usa Checkout**, y nadie le pasa `invitacion`: la línea del correo no se ve en ninguna página (está
+    pasada a tokens, sin probar a la vista). `LoginModal.jsx` (Fase 9) y `FormularioSolicitud.jsx` (Fase 8) todavía nombran
+    `AvisoDemo.jsx` en su comentario de "copias del correo"; quitarlo al cambiarlos a `contacto.js`.
+  - Si se deja el carrito cargando para siempre (la API no responde y tampoco falla), Checkout se queda en "Cargando tu
+    pedido…": en `api.js` solo el cierre de sesión tiene tiempo límite (`AbortSignal.timeout`), las demás llamadas no.
+    Fuera de esta fase.
 
 ### Fase 7 — Adopción (lista) · rama `rediseno-front-fase-7-adopcion` · 🟡
 - [ ] 7.1 Tarjeta de mascota propia (distinta a la de producto), etiquetas de rasgos, foto de respaldo, sin animación de título (§3.4)
