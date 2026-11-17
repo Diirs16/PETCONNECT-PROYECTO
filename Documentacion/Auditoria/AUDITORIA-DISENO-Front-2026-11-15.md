@@ -724,7 +724,41 @@ comunidad (RF07), diario de salud (RF08), GPS (RF10) y compra real (RF11). **El 
     desvanecido aunque la opacidad calculada sea 1. Las medidas se hicieron con `getBoundingClientRect`.
 
 ### Fase 10 — Contacto · rama `rediseno-front-fase-10-contacto` · 🟢
-- [ ] 10.1 Contact con tokens; revisar contigo si el horario de atención es real
+- [x] 10.1 Contact con tokens; revisar contigo si el horario de atención es real
+- *Hecha el 17/11/2026, pendiente de tu aprobación.* Revisada en el navegador integrado a 320, 375 y 1280 px. Lint 0 errores
+  y 0 avisos, build y 149 pruebas pasan. Ningún hex, `gray-*`, `black`, `white`, `red-*`, `green-*` ni `amber-*` en
+  `Contact.jsx` ni en `contacto.js`. `impeccable detect`: 0 en el archivo; en `/contacto` (1280 y 375 px), solo el fondo
+  crema (dirección A aprobada). `FormularioSolicitud.jsx` no se tocó. Decisiones aprobadas:
+  - **D10.1 Horario:** se quitó, sin reemplazo. Nadie confirmó un horario real (mismo criterio que el teléfono del pie, D3).
+    Si algún día existe, va como constante en `utils/contacto.js`.
+  - **D10.2 Ubicación:** `CIUDAD` tal cual ("Armenia, Quindío"), igual que el pie; sin "Colombia".
+  - **D10.3 Estructura:** alineada a la izquierda, `h1` en `font-display` (30 → 36 px). Primero la información de contacto
+    (el correo sirve sin cuenta) y luego el formulario; dos columnas (5/12 y 7/12) desde 1024 px, mismo orden visual y de
+    lectura. Títulos: h1 → h2 "Información de contacto" → h2 "Formulario de contacto" (`sr-only`, solo lector de pantalla)
+    → h3 del formulario. Sin tarjeta gris: lista `<dl>` con el ícono en un círculo `marca-claro`. El correo es un enlace
+    `marca` de 44 px de alto que se parte antes de la @ (`<wbr>` + `wrap-anywhere`, como el pie).
+  - **D10.4** Pestaña "Contacto · PetConnect" y la descripción de §3.6.
+  - **D10.5 Textos:** la introducción nombra primero el correo ("…Escríbenos a nuestro correo de atención o con el
+    formulario."); se quitó el horario; nuevo h2 oculto "Formulario de contacto". Lo demás quedó igual.
+  - **D10.6** `Contact.jsx` ya no tiene copia del correo ni de la ciudad (salen de `utils/contacto.js`) y `contacto.js`
+    actualizó su comentario de quién los usa.
+  Cómo se probó, sin enviar mensajes ni iniciar sesión de verdad: se cambió `window.fetch` en la pestaña **solo** para
+  `/api/auth/*` y `/api/solicitudes/contacto`, con una cuenta inventada (`@ejemplo.test`), una contraseña generada al azar
+  por la página (nunca se mostró) y un token con "€" (el navegador no deja mandarlo). Casos: sin sesión ("Inicia sesión
+  para enviar" y "Crear cuenta"); Escape en el inicio de sesión (el foco vuelve al botón); al entrar, el foco va al título
+  "Escríbenos" (`contacto-titulo`); envío 201 ("Mensaje enviado" con número, foco en ese título), 500, sin conexión, 403 y
+  401 (aviso enfocado, el mensaje se conserva, "Volver a iniciar sesión" en 401 y 403; tras el 401, volver a entrar deja
+  el foco en el título con el mensaje intacto). Todo solo con teclado y con foco visible, también en el enlace del correo.
+  Nada desborda a 320 px (sin sesión, escribiendo y enviado). Al final se borraron las dos claves (`localStorage` vacío,
+  como al empezar) y se recargó con el `fetch` original.
+
+  Notas para otras fases:
+  - **Fase 11 (Política):** `PoliticaDatos.jsx` es la única copia que queda del correo (`CORREO_DATOS`); pasarlo a
+    `CORREO_ATENCION`. El domicilio ("Armenia, Quindío, Colombia" y "Cra. 6 # 17 Norte 01") es texto legal: se queda
+    escrito allá, no se cambia por `CIUDAD`. Conviene confirmar que esa dirección es real. La app móvil tiene su propia
+    copia del correo (fuera del rediseño).
+  - **Pendientes que no se hicieron (funciones nuevas):** botón para copiar el correo, mapa y redes sociales. No hacen
+    falta hoy.
 
 ### Fase 11 — Política de datos · rama `rediseno-front-fase-11-politica` · 🟢
 - [ ] 11.1 Solo tokens y tipografía; **el texto legal no se cambia**
