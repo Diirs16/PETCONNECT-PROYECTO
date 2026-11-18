@@ -761,7 +761,45 @@ comunidad (RF07), diario de salud (RF08), GPS (RF10) y compra real (RF11). **El 
     falta hoy.
 
 ### Fase 11 — Política de datos · rama `rediseno-front-fase-11-politica` · 🟢
-- [ ] 11.1 Solo tokens y tipografía; **el texto legal no se cambia**
+- [x] 11.1 Solo tokens y tipografía; **el texto legal no se cambia**
+- *Hecha el 17/11/2026, pendiente de tu aprobación.* Revisada en el navegador integrado a 320, 375 y 1280 px. Lint con 0
+  errores y 0 avisos; build y 149 pruebas pasan. Ningún hex, `gray-*`, `black`, `white`, `red-*`, `green-*` ni `amber-*` en
+  `PoliticaDatos.jsx`. `VERSION_POLITICA` sigue en "1.1". `CasillaAutorizacion.jsx`, el borrador `.md`, el Backend y el
+  Móvil no se tocaron. **Texto legal:** se guardó el `innerText` del `<main>` antes de editar (fuera del repo) y se comparó
+  después con SHA-256: idéntico letra por letra a 1280 px (exacto, sin espacios repetidos y `textContent`) y a 375 px (con
+  el índice abierto y cerrado). Decisiones aprobadas:
+  - **D11.1** `<title>` "Política de datos personales · PetConnect" y descripción con `<meta>` de React 19; se borró el
+    `useEffect` que cambiaba `document.title`.
+  - **D11.2** Aviso "Borrador en revisión" con la misma apariencia que `AvisoDemo` (`aviso` sobre `aviso-claro`, 6,78:1).
+    "Por definir" se distingue sin depender del color: la palabra escrita, el subrayado punteado y el prefijo en negrita.
+    Resaltado sin redondeo, con `box-decoration-clone`.
+  - **D11.3** "En pocas palabras": bloque `marca-claro` con `rounded-tarjeta`, sin borde, sombra ni raya lateral; viñetas
+    `marca`. Texto 12,69:1; enlace "sección 8" 5,32:1.
+  - **D11.4** h1 y h2 en `font-display` (h1 30 → 36 px; h2 20 → 24 px); número de sección en `marca` (5,77:1), h3 Figtree
+    semibold. Todo el texto legal en `tinta` y 16 px; `tinta-suave` solo en "Versión…", números del índice y viñetas.
+    Enlaces `marca` subrayados; el correo se parte antes de la @ (`<wbr>`), como en el pie y en Contacto.
+  - **D11.5** Índice lateral fijo (escritorio) y `<details>` (celular) con tokens, `rounded-control` en los enlaces,
+    `rounded-tarjeta` en la caja y el foco global del sitio. Sin "sección actual" (sería una función nueva).
+  - **D11.6** `PoliticaDatos.jsx` ya no tiene `CORREO_DATOS` (usa `CORREO_ATENCION`); `contacto.js` actualizó su comentario.
+    En la web ya no queda ninguna copia del correo.
+  Cómo se probó: solo con teclado, el `<details>` se abre con Enter; los 14 saltos del índice dejan el título en y=137 px
+  (el Header termina en 65 px; "Vigencia" queda más abajo porque es el final de la página). El enlace "sección 8", los dos
+  `mailto` y el `tel` tienen foco visible (anillo `marca`). Contraste medido: el mínimo es 5,32:1. A 320 px nada se sale y
+  el correo baja en dos líneas antes de la @. `impeccable detect`: 0 en el archivo; en `/politica-de-datos` a 375 px solo el
+  fondo crema (dirección A aprobada); a 1280 px, además, 11 avisos `line-length` (ver abajo). La página no llama a la API;
+  `localStorage` quedó vacío, como al empezar.
+
+  Notas y pendientes:
+  - **Ancho de lectura:** con Figtree, `68ch` mide 688 px (el "0" de Figtree es ancho) y deja unas 88–95 letras por línea;
+    lo cómodo es menos de 80. Ya pasaba antes de esta fase (misma columna). **Decisión del 17/11/2026: se deja en
+    `68ch`** (§3.8 y D11.4); se descartó `54ch` (unas 72 letras). Los 11 avisos `line-length` de `impeccable detect` a
+    1280 px quedan aceptados por esa decisión.
+  - **Texto legal (para revisar contigo, no se tocó):** (1) el teléfono 324 368 2078 del responsable: el pie lo quitó en D3
+    porque no había uno del proyecto; (2) "Daniel Jimenez" y "Nelson Perez" sin tilde, y "Andrea Yasmin" sin apellido;
+    (3) confirmar que "Cra. 6 # 17 Norte 01" es real; (4) sección 4: los mensajes de contacto no tienen "mascota";
+    (5) el resumen dice "con tu teléfono, si lo escribes" también para contacto, pero solo adopción pide teléfono; (6) la
+    página dice versión 1.1 y el archivo se llama `…v1.0-BORRADOR.md`.
+  - **Funciones que no se agregaron:** marcar la sección actual en el índice, imprimir/descargar PDF y "volver arriba".
 
 ### Fase 12 — Pulido final · rama `rediseno-front-fase-12-pulido` · 🟡
 - [ ] 12.1 Textos en mayúscula de oración en todo el sitio (#38)
