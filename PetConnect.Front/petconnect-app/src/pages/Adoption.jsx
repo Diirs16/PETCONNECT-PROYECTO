@@ -24,6 +24,8 @@ export default function Adoption() {
     errorMas,
   } = useListaPaginada(getMascotasAdopcion, POR_PAGINA_ADOPCION);
   const tituloRef = useRef(null);
+  // Fase 12 (D12.4): "Ver más" lleva el foco a la primera mascota nueva de esta lista
+  const listaRef = useRef(null);
 
   // Al pulsar "Reintentar" el botón desaparece y el foco caería al inicio de la
   // página. Se pasa al título para que quien usa teclado siga en el mismo lugar
@@ -77,7 +79,7 @@ export default function Adoption() {
 
         {estado === "listo" && pets.length > 0 && (
           // 1 columna en el celular (la foto manda), 2 desde 640 px, 3 desde 1024 y 4 desde 1280.
-          <ul className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <ul ref={listaRef} className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {pets.map((pet) => (
               <li key={pet.id}>
                 <TarjetaMascota pet={pet} />
@@ -93,6 +95,7 @@ export default function Adoption() {
             error={errorMas}
             onVerMas={verMas}
             texto="Ver más mascotas"
+            listaRef={listaRef}
           />
         )}
       </div>

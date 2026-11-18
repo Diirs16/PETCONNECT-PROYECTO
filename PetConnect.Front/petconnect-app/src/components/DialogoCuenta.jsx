@@ -46,7 +46,7 @@ if (typeof document !== "undefined") {
 const esVisible = (el) => Boolean(el?.isConnected) && el.getClientRects().length > 0;
 
 // Si quien abrió ya no se ve (el menú del celular se cerró, el botón cambió por
-// "Salir" o por el formulario), se usa el respaldo que ese botón indicó en
+// "Cerrar sesión" o por el formulario), se usa el respaldo que ese botón indicó en
 // data-foco-respaldo: una lista de id, se usa el primero que esté visible.
 function destinoDelFoco(el) {
   if (!el) return null;

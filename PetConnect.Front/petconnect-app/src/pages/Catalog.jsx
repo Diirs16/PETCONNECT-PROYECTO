@@ -24,6 +24,8 @@ export default function Catalog() {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState(TODOS);
   const buscador = useRef(null);
+  // Fase 12 (D12.4): "Ver más" lleva el foco al primer producto nuevo de esta lista
+  const listaRef = useRef(null);
   // 3.3 (A-23): los productos y sus categorías salen SOLO de la API. Antes, si
   // la API fallaba o no traía nada, se quedaban los 12 productos inventados.
   // 4.17 (NC-003): se piden de 50 en 50 (el máximo de la API). El buscador y las
@@ -156,7 +158,10 @@ export default function Catalog() {
                 Prueba con otra palabra o elige otra categoría.
               </EstadoCarga>
             ) : (
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">
+              <div
+                ref={listaRef}
+                className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4"
+              >
                 {filtered.map((product) => (
                   <ProductCard key={product.id} product={product} />
                 ))}
@@ -179,6 +184,7 @@ export default function Catalog() {
               error={errorMas}
               onVerMas={verMas}
               texto="Ver más productos"
+              listaRef={listaRef}
             />
           </>
         )}

@@ -197,3 +197,23 @@ test("Header: los dos botones esperan la API desactivados y avisan si no se conf
   assert.match(header, /no pudimos confirmarlo con el\s+servidor/);
   assert.match(header, /aria-label="Cerrar aviso"/);
 });
+
+test("Header: la acción se llama 'Cerrar sesión' en escritorio y en el celular (Fase 12, D12.2)", () => {
+  const header = leer("../src/components/Header.jsx");
+  // Un solo nombre en todo el recorrido: "Cerrar sesión" → "Cerrando sesión…" → "Cerraste sesión…"
+  assert.doesNotMatch(header, /"Salir"/);
+  assert.match(header, /cerrando \? "Cerrando sesión…" : "Cerrar sesión"/);
+  assert.match(header, /Cerrar sesión\{" "\}/);
+  assert.match(header, /Cerraste sesión en este navegador/);
+  // Al terminar, el foco va a "Iniciar sesión" (escritorio) o a "Menú" (celular)
+  assert.match(header, /\["cuenta-entrar", "boton-menu"\]/);
+  assert.match(header, /id="cuenta-entrar"/);
+});
+
+test("Header: Escape cierra el menú del celular, salvo que haya una ventana abierta (Fase 12, D12.3)", () => {
+  const header = leer("../src/components/Header.jsx");
+  assert.match(header, /evento\.key !== "Escape"/);
+  assert.match(header, /document\.querySelector\("dialog\[open\]"\)/);
+  assert.match(header, /botonMenuRef\.current\?\.focus\(\)/);
+  assert.match(header, /removeEventListener\("keydown"/);
+});

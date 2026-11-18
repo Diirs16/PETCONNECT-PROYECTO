@@ -802,9 +802,74 @@ comunidad (RF07), diario de salud (RF08), GPS (RF10) y compra real (RF11). **El 
   - **Funciones que no se agregaron:** marcar la sección actual en el índice, imprimir/descargar PDF y "volver arriba".
 
 ### Fase 12 — Pulido final · rama `rediseno-front-fase-12-pulido` · 🟡
-- [ ] 12.1 Textos en mayúscula de oración en todo el sitio (#38)
-- [ ] 12.2 `/impeccable audit` completo (meta: ≥ 17/20) y revisión a 375 y 1280 px de todas las páginas
-- [ ] 12.3 Pendientes de la auditoría de la Fase 1: el menú móvil cierra con Escape; un solo nombre para cerrar sesión ("Salir" en escritorio y "Cerrar sesión" en celular)
+- [x] 12.1 Textos en mayúscula de oración en todo el sitio (#38)
+- [x] 12.2 `/impeccable audit` completo (meta: ≥ 17/20) y revisión a 375 y 1280 px de todas las páginas
+- [x] 12.3 Pendientes de la auditoría de la Fase 1: el menú móvil cierra con Escape; un solo nombre para cerrar sesión ("Salir" en escritorio y "Cerrar sesión" en celular)
+- *Hecha el 18/11/2026, pendiente de tu aprobación.* Seis partes, con `npm run lint` (0 errores, 0 avisos), `npm run build`
+  y `npm test` después de cada una; al final 149 pruebas pasan (+2 del Header, −2 de `datosMascota`). Ningún hex, `gray-*`,
+  `black`, `white`, `red-*`, `green-*` ni `amber-*` en los archivos tocados. `PoliticaDatos.jsx`, `CasillaAutorizacion.jsx`,
+  el borrador `.md`, CLAUDE.md, el Backend y el Móvil no se tocaron (`git diff` vacío en los dos `.jsx` legales;
+  `VERSION_POLITICA` sigue en "1.1"). **Texto legal:** se guardó la huella SHA-256 del `innerText` del `<main>` de
+  `/politica-de-datos` antes de la parte 1 y se comparó al final: idéntica a 1280 px (exacta, sin espacios repetidos y
+  `textContent`) y a 375 px (índice cerrado y abierto). Decisiones aprobadas:
+  - **D12.1 Mayúscula de oración:** un script revisó todo `src/` y se leyeron a mano títulos, botones, `aria-label`,
+    `placeholder` y `<title>`. Las fases anteriores ya habían corregido los textos de #38; solo quedaba el `<title>` de
+    `index.html` ("Pet Connect - Productos…" → "PetConnect · Adopción responsable y productos para mascotas", igual que el
+    Home). Se dejaron "Pet Connect, ir al inicio" (el logo muestra "Pet Connect" separado; WCAG 2.5.3) y "demo" (la RAE
+    la acepta; texto aprobado en la Fase 6).
+  - **D12.2 Cerrar sesión:** "Cerrar sesión" en escritorio y celular → "Cerrando sesión…" → "Cerraste sesión…". Al
+    terminar, el foco va a "Iniciar sesión" (escritorio, id `cuenta-entrar`) o a "Menú" (celular); antes caía al `<body>`.
+    Cabe a 1024 px con un nombre largo (el botón termina en 985 px) y a 320 px el nombre baja a una segunda línea.
+  - **D12.3 Escape:** cierra el menú del celular; si el foco estaba en el menú o en su botón, vuelve a "Menú"; si estaba
+    fuera, no se mueve. Con un `<dialog>` abierto (carrito, cuenta) no hace nada. Cerrar con clic fuera: no (función nueva).
+  - **D12.4 "Ver más":** `aria-disabled` mientras carga (el foco no se pierde y el lector oye "Cargando…"); al llegar,
+    el foco pasa al primer enlace del primer elemento nuevo. Con error, se queda en el botón y se lee el aviso. Si un
+    filtro del catálogo oculta todo lo nuevo, se queda en el botón, o va al último producto visible si ya no hay más.
+    Cambió `BotonVerMas.jsx` (nueva prop `listaRef`), y `Catalog.jsx` y `Adoption.jsx` le pasan la lista.
+  - **D12.5 Carrito:** sin precio no hay subtotal ("Precio no disponible", ya no "$ 0"); el total sigue la regla de
+    Checkout ("No incluye N productos sin precio." o "Precio no disponible" si ninguno tiene). No se pasó a `DialogoCuenta`.
+  - **D12.6 Aviso de cierre sin confirmar:** fundido de 150 ms sin desplazamiento (`aviso-entra`); se borraron
+    `toast-enter` y `@keyframes fadeInRight`.
+  - **D12.7** Se borró `datosMascota` y sus dos pruebas; la prueba de `rasgosMascota` sigue vigilando que no salgan
+    tamaño, vacunación ni esterilización.
+  - **D12.8** Auditoría al final; solo se arregla lo pequeño dentro de los archivos aprobados.
+
+  **`/impeccable audit` final: 17/20 (Bueno; la inicial fue 11/20).**
+
+  | # | Dimensión | Antes | Ahora | Hallazgo clave |
+  |---|---|---|---|---|
+  | 1 | Accesibilidad | 2 | 3 | Diálogos nativos, foco cuidado en todos los recorridos, contraste ≥ 4,5:1 medido. Faltan los pendientes de la Fase 9 (estado de las reglas de contraseña para el lector, "Registrarse" desactivado sin explicar) |
+  | 2 | Rendimiento | 3 | 3 | Rutas diferidas (Política 20 kB, Registro 10 kB, Checkout 6 kB), imágenes `lazy`, contextos memorizados; el JS principal pesa 319 kB (97 kB comprimido) |
+  | 3 | Temas y tokens | 1 | 3 | 0 colores escritos a mano en `src/`. No hay modo oscuro (no se pidió), por eso no llega a 4 |
+  | 4 | Responsive | 3 | 4 | Nada se desborda a 320, 375 ni 1280 px en 15 vistas; controles de 44 px |
+  | 5 | Integridad del diseño | 2 | 4 | Sistema propio y coherente (dirección A). El detector solo marca el fondo crema (aprobado) y el ancho de línea de la Política (aceptado) |
+
+  Cómo se revisó: con datos inventados (`window.fetch` cambiado solo en la pestaña; la API estaba apagada; nada tocó la
+  BD ni archivos) se midieron Home, Catálogo, Producto (normal y agotado), Checkout (vacío y con productos), Adopción,
+  Ficha de mascota, Contacto, Política, 404, carrito (vacío y con un producto sin precio), Inicio de sesión y Registro a
+  1280, 375 y 320 px: 0 desbordes y todo el texto ≥ 4,5:1 (≥ 3:1 en texto grande). `impeccable detect` en los 8 archivos
+  tocados: 0 (1 aviso: la curva con rebote de la celebración, aprobada en D8.6). Por URL, en 9 páginas a 1280 y 375 px:
+  solo el fondo crema; en la Política a 1280 px, además, los 11 avisos `line-length` aceptados el 17/11; en Adopción a
+  375 px, un aviso "straggler" (ver pendientes). Sesión simulada con una cuenta inventada (`@ejemplo.test`) y un token con
+  "€" que el navegador no deja enviar; cierre de sesión con 200 y con 503 (aviso). Al final `localStorage` quedó vacío,
+  como al empezar.
+
+  Límites de la prueba: el panel del navegador integrado estuvo oculto, así que el teclado se probó enfocando elementos
+  y mandando `click`/`keydown` desde JavaScript, no con teclas reales; con el panel oculto el navegador además congela
+  las animaciones y frena los relojes (el carrito y el registro tardaban en terminar de cerrarse; con el panel visible
+  funcionan, como se probó en las Fases 5 y 9). "Reducir movimiento" no se puede emular: se comprobó que `aviso-entra`
+  es solo un fundido y que `toast-enter` y `fadeInRight` ya no existen en el CSS cargado.
+
+  Pendientes para el Cierre (ninguno bloquea unir `rediseno-front` a `main`):
+  - **Probar con teclas reales** con el panel visible: Escape en el menú, "Ver más" y cerrar sesión (2 minutos).
+  - **`EstadoCarga.jsx`:** el título de error de Adopción deja "adopción" sola en la última línea a 375 px (aviso
+    "straggler"). Arreglo de una línea: `text-pretty` en el título. No se tocó (archivo fuera de esta fase).
+  - **`ProductCard.jsx`:** el nombre mide 22 px de alto en la tarjeta horizontal (< 24 px de WCAG 2.5.8); pasa por la
+    excepción de "control equivalente" (la foto lleva a la misma ficha), pero `py-0.5` lo dejaría en 24 px.
+  - **Funciones no agregadas:** cerrar el menú del celular con un clic fuera; un diálogo común para carrito y cuenta.
+  - **Siguen fuera** (sin cambios): `try/catch` del token en `api.js`, tiempo límite de las llamadas, carrito entre
+    pestañas, `?especie=` en la API, "Registrarse" desactivado sin explicación, otra solicitud para la misma mascota,
+    pendientes del texto legal de la Fase 11 y la foto del producto 14 (`seed.py`).
 
 ### Fase 13 (opcional) — Pruebas de componentes · rama `rediseno-front-fase-13-pruebas` · 🔴
 - [ ] 13.1 Con `ecc:react-testing`: pruebas de `CartModal` (Escape, foco, tope de stock), `Header` (nombre con tildes) y `ProductCard` (agotado). Necesita instalar Vitest + Testing Library: se decide al llegar

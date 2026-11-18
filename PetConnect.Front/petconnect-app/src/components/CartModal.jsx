@@ -44,8 +44,10 @@ function FilaProducto({ item, onCambiar, onQuitar, onIrAFicha }) {
   const maximo = Math.max(topeDeStock(item.stock), 1);
   const enMinimo = item.quantity <= 1;
   const enMaximo = item.quantity >= maximo;
-  const subtotal = formatearPrecio(Number(item.price) * item.quantity);
   const precioUnidad = formatearPrecio(item.price);
+  // Fase 12 (D12.5): sin precio no hay subtotal. Number(null) es 0 y salía "$ 0"
+  // (mismo arreglo que Checkout.jsx en la Fase 6).
+  const subtotal = precioUnidad ? formatearPrecio(Number(item.price) * item.quantity) : null;
   const idMaximo = `carrito-maximo-${item.id}`;
 
   // aria-disabled en vez de disabled: un botón desactivado pierde el foco y,
@@ -213,6 +215,10 @@ export default function CartModal() {
   };
 
   const unidadesCargadas = items.reduce((suma, i) => suma + i.quantity, 0);
+  // Fase 12 (D12.5): totalPrice no suma los productos sin precio. Si ninguno tiene
+  // precio, no se muestra "$ 0"; si faltan algunos, se avisa (igual que Checkout).
+  const sinPrecio = items.filter((i) => formatearPrecio(i.price) === null).length;
+  const total = sinPrecio < items.length ? formatearPrecio(totalPrice) : null;
   const vacio = items.length === 0 && estadoCarrito === "listo";
 
   return (
@@ -310,11 +316,22 @@ export default function CartModal() {
 
           {items.length > 0 && (
             <div className="border-t border-borde px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-6">
-              <div className="mb-4 flex items-baseline justify-between gap-3">
-                <span className="text-base text-tinta-suave">Total</span>
-                <span className="text-2xl font-semibold tabular-nums text-tinta">
-                  {formatearPrecio(totalPrice)}
-                </span>
+              <div className="mb-4">
+                <div className="flex items-baseline justify-between gap-3">
+                  <span className="text-base text-tinta-suave">Total</span>
+                  {total ? (
+                    <span className="text-2xl font-semibold tabular-nums text-tinta">{total}</span>
+                  ) : (
+                    <span className="text-base text-tinta-suave">Precio no disponible</span>
+                  )}
+                </div>
+                {total && sinPrecio > 0 && (
+                  <p className="mt-1 text-right text-sm text-tinta-suave">
+                    {sinPrecio === 1
+                      ? "No incluye 1 producto sin precio."
+                      : `No incluye ${sinPrecio} productos sin precio.`}
+                  </p>
+                )}
               </div>
               {/* Es un enlace (lleva a otra página), con forma de botón principal */}
               <Link

@@ -29,7 +29,5 @@ export function rasgosMascota(pet) {
   return [raza, formatearEdad(pet?.age), formatearSexo(pet?.gender)].filter(Boolean);
 }
 
-/** Línea "Raza · Edad · Sexo" con solo los datos que se conocen ("" si no hay ninguno). */
-export function datosMascota(pet) {
-  return rasgosMascota(pet).join(" · ");
-}
+// Fase 12 (D12.7): se borró datosMascota (la línea "Raza · Edad · Sexo"); ninguna
+// página la usaba desde la Fase 8. La tarjeta y la ficha usan rasgosMascota.

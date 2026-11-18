@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
   AlertTriangle,
@@ -57,6 +57,11 @@ export default function Header() {
   // (decisión B1) y, si no pudo confirmar el cierre, se avisa (decisión A1).
   const [cerrando, setCerrando] = useState(false);
   const [avisoCierre, setAvisoCierre] = useState(false);
+  // Fase 12 (D12.2): al cerrar sesión el botón desaparece y el foco caía al <body>.
+  // Esta marca pide llevarlo a "Iniciar sesión" (escritorio) o a "Menú" (celular).
+  const enfocarTrasCerrar = useRef(false);
+  const menuRef = useRef(null);
+  const botonMenuRef = useRef(null);
 
   const nombre = nombreBonito(user?.name) || "Mi cuenta";
 
@@ -67,10 +72,42 @@ export default function Header() {
       const resultado = await logout();
       setAvisoCierre(resultado === "sin-confirmar");
     } finally {
+      enfocarTrasCerrar.current = true;
       setCerrando(false);
       setMenuOpen(false);
     }
   }
+
+  // Corre cuando la sesión ya se cerró y el Header se volvió a dibujar. Solo mueve
+  // el foco si quedó perdido en el <body> (no se lo quita a nadie).
+  useEffect(() => {
+    if (!enfocarTrasCerrar.current || cerrando || user) return;
+    enfocarTrasCerrar.current = false;
+    const actual = document.activeElement;
+    if (actual && actual !== document.body) return;
+    const destino = ["cuenta-entrar", "boton-menu"]
+      .map((id) => document.getElementById(id))
+      .find((el) => el && el.getClientRects().length > 0);
+    destino?.focus();
+  }, [cerrando, user]);
+
+  // Fase 12 (D12.3): Escape cierra el menú del celular. Si el foco estaba en el
+  // menú o en su botón, vuelve a "Menú". Si hay una ventana abierta (carrito,
+  // inicio de sesión), Escape es de ella y aquí no se hace nada.
+  useEffect(() => {
+    if (!menuOpen) return undefined;
+    function alPresionarTecla(evento) {
+      if (evento.key !== "Escape" || evento.defaultPrevented) return;
+      if (document.querySelector("dialog[open]")) return;
+      const actual = document.activeElement;
+      const estabaEnElMenu =
+        menuRef.current?.contains(actual) || botonMenuRef.current === actual;
+      setMenuOpen(false);
+      if (estabaEnElMenu) botonMenuRef.current?.focus();
+    }
+    document.addEventListener("keydown", alPresionarTecla);
+    return () => document.removeEventListener("keydown", alPresionarTecla);
+  }, [menuOpen]);
 
   const isActive = (path) => location.pathname === path;
 
@@ -148,12 +185,15 @@ export default function Header() {
                 disabled={cerrando}
                 className="min-h-11 rounded-full px-3 text-sm font-medium text-tinta-suave transition-colors hover:bg-papel hover:text-tinta disabled:cursor-wait"
               >
-                {cerrando ? "Cerrando sesión…" : "Salir"}
+                {/* Fase 12 (D12.2): mismo nombre que en el menú del celular */}
+                {cerrando ? "Cerrando sesión…" : "Cerrar sesión"}
               </button>
             </div>
           ) : (
-            // Fase 9 (D9.3): al entrar este botón cambia por "Salir"; el foco va ahí
+            // Fase 9 (D9.3): al entrar este botón cambia por "Cerrar sesión"; el foco va ahí.
+            // Fase 12 (D12.2): al cerrar sesión el foco vuelve aquí (id "cuenta-entrar").
             <button
+              id="cuenta-entrar"
               type="button"
               onClick={openLogin}
               data-foco-respaldo="cuenta-salir"
@@ -166,6 +206,7 @@ export default function Header() {
 
           <button
             id="boton-menu"
+            ref={botonMenuRef}
             type="button"
             onClick={() => setMenuOpen(!menuOpen)}
             aria-expanded={menuOpen}
@@ -186,6 +227,7 @@ export default function Header() {
           apunte a algo real. Sin animación de entrada (§3.4). */}
       <div
         id="menu-movil"
+        ref={menuRef}
         hidden={!menuOpen}
         className="border-t border-borde bg-superficie lg:hidden"
       >
@@ -252,7 +294,7 @@ export default function Header() {
         className="pointer-events-none fixed inset-x-4 top-20 z-[60] flex justify-end sm:left-auto sm:right-5"
       >
         {avisoCierre && !user && (
-          <div className="toast-enter pointer-events-auto flex w-full max-w-sm items-start gap-3 rounded-control bg-noche px-4 py-3 text-sm text-papel shadow-elevada">
+          <div className="aviso-entra pointer-events-auto flex w-full max-w-sm items-start gap-3 rounded-control bg-noche px-4 py-3 text-sm text-papel shadow-elevada">
             <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-aviso-claro" aria-hidden="true" />
             <p className="flex-1">
               Cerraste sesión en este navegador, pero no pudimos confirmarlo con el

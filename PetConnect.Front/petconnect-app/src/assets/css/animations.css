@@ -9,17 +9,7 @@
    Al final está el bloque de "reducir movimiento" (#12). */
 
 /* --- Keyframes --- */
-
-@keyframes fadeInRight {
-  from {
-    opacity: 0;
-    transform: translateX(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
+/* Fase 12 (D12.6): se borró fadeInRight (solo lo usaba el aviso de cierre de sesión). */
 
 @keyframes fadeIn {
   from { opacity: 0; }
@@ -172,8 +162,11 @@ html:has(dialog[open]) {
 /* --- Aviso de cierre de sesión sin confirmar (Header.jsx, ítem 4.13) --- */
 /* El aviso "agregado al carrito" ya no usa clases: es AvisoCarrito.jsx (Fase 5). */
 
-.toast-enter {
-  animation: fadeInRight 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+/* Fase 12 (D12.6): antes entraba deslizándose desde la derecha (toast-enter), un
+   movimiento que §3.4 no tiene. Ahora es un fundido corto, sin desplazamiento, así
+   que sirve igual con "reducir movimiento". */
+.aviso-entra {
+  animation: fadeIn 150ms var(--ease-out) both;
 }
 
 /* --- Reducir movimiento (#12) --- */
@@ -182,8 +175,7 @@ html:has(dialog[open]) {
    El carrito y su contador tienen su propio bloque, junto a su animación. */
 
 @media (prefers-reduced-motion: reduce) {
-  .page-enter,
-  .toast-enter {
+  .page-enter {
     animation: fadeIn 150ms ease-out both;
   }
 }
