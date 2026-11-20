@@ -1,5 +1,7 @@
-import { useEffect } from "react";
 import { AlertTriangle } from "lucide-react";
+// Correo de atención del proyecto (decisión D.1, 06/11/2026), en un solo lugar desde la Fase 2.
+// Es parte del TEXTO LEGAL: si cambia, cambia también el .md y sube la versión (ver abajo).
+import { CORREO_ATENCION } from "../utils/contacto";
 
 // NC-005 (ítem 3.1): copia publicada de la Parte A de
 // Documentacion/Legal/POLITICA-TRATAMIENTO-DATOS-v1.0-BORRADOR.md (Ley 1581 de 2012).
@@ -9,18 +11,28 @@ import { AlertTriangle } from "lucide-react";
 // BORRADOR: lo deben validar el dueño del proyecto y el instructor antes de publicarlo.
 // 1.1 (07/11/2026, ítem 3.6): agrega las solicitudes de adopción y los mensajes de contacto.
 // tests/solicitudes.test.js revisa que sea la misma versión de la API.
+//
+// Fase 11 del rediseño (17/11/2026): SOLO clases, estructura visual y comentarios. El texto
+// legal no cambió (ni una palabra), por eso la versión sigue en 1.1. Colores, radios y
+// tipografía salen de los tokens de index.css (dirección A); el correo sale de utils/contacto.js
+// (antes había una copia aquí, CORREO_DATOS). La pestaña usa <title> y <meta> de React 19.
 const VERSION_POLITICA = "1.1";
-// Correo de atención del proyecto (decisión D.1, 06/11/2026). Es del proyecto, no de una persona.
-const CORREO_DATOS = "proyectopetconnect+atencion@gmail.com";
 
-/** Enlace al correo de datos; break-words: baja entero de línea y solo se parte si no cabe solo (375 px). */
+const [usuarioCorreo, dominioCorreo] = CORREO_ATENCION.split("@");
+
+/** Clases de los enlaces dentro del texto (correo, teléfono, "sección 8"). */
+const ENLACE = "font-medium text-marca underline underline-offset-4 hover:text-marca-hover";
+
+/**
+ * Enlace al correo de atención. <wbr> = "aquí se puede partir": en celulares angostos baja de
+ * línea antes de la @ y no en medio de una palabra (igual que en el pie y en Contacto).
+ * <wbr> no agrega letras: el texto que se ve y que se copia es el mismo correo.
+ */
 function CorreoDatos() {
   return (
-    <a
-      href={`mailto:${CORREO_DATOS}`}
-      className="font-medium text-black underline underline-offset-2 break-words hover:text-gray-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
-    >
-      {CORREO_DATOS}
+    <a href={`mailto:${CORREO_ATENCION}`} className={`${ENLACE} wrap-anywhere`}>
+      {usuarioCorreo}
+      <wbr />@{dominioCorreo}
     </a>
   );
 }
@@ -42,11 +54,16 @@ const SECCIONES = [
   { id: "vigencia", titulo: "Vigencia" },
 ];
 
-/** Dato que todavía no se ha decidido (Parte D del borrador). Nunca se inventa. */
+/**
+ * Dato que todavía no se ha decidido (Parte D del borrador). Nunca se inventa.
+ * D11.2: se distingue sin depender solo del color (WCAG 1.4.1) por tres cosas: la palabra
+ * escrita "Por definir:", el subrayado punteado y el prefijo en negrita. Fondo de resaltador
+ * sin redondeo; box-decoration-clone repite el fondo en cada línea si el texto se parte.
+ */
 function PorDefinir({ children }) {
   return (
-    <span className="rounded bg-amber-100 px-1 text-amber-950 underline decoration-amber-600 decoration-dashed underline-offset-4">
-      Por definir: {children}
+    <span className="box-decoration-clone bg-aviso-claro px-0.5 text-aviso underline decoration-aviso decoration-dashed underline-offset-4">
+      <span className="font-semibold">Por definir:</span> {children}
     </span>
   );
 }
@@ -54,9 +71,14 @@ function PorDefinir({ children }) {
 function Seccion({ id, children }) {
   const n = SECCIONES.findIndex((s) => s.id === id);
   return (
-    <section id={id} aria-labelledby={`${id}-titulo`} className="scroll-mt-24 border-t border-gray-200 pt-8 mt-10 first:mt-0 first:border-t-0 first:pt-0">
-      <h2 id={`${id}-titulo`} className="text-xl font-bold leading-snug mb-4 text-gray-950">
-        <span className="text-gray-500 font-semibold mr-2 tabular-nums">{n + 1}.</span>
+    // scroll-mt-24 (96 px): al saltar desde el índice, el Header fijo (64 px) no tapa el título
+    <section id={id} aria-labelledby={`${id}-titulo`} className="mt-12 scroll-mt-24 border-t border-borde pt-10">
+      <h2
+        id={`${id}-titulo`}
+        className="mb-4 font-display text-xl font-normal leading-snug text-balance text-tinta md:text-2xl"
+      >
+        {/* El número se queda: el texto remite a "sección 1", "sección 5" y "sección 8" */}
+        <span className="mr-2 tabular-nums text-marca">{n + 1}.</span>
         {SECCIONES[n].titulo}
       </h2>
       <div className="space-y-4">{children}</div>
@@ -64,16 +86,18 @@ function Seccion({ id, children }) {
   );
 }
 
+/** Índice de secciones. Sin "sección actual" a propósito: sería una función nueva (pendiente). */
 function Indice() {
   return (
-    <ol className="space-y-1 text-sm list-none p-0 m-0">
+    <ol className="m-0 list-none space-y-1 p-0 text-sm">
       {SECCIONES.map((s, i) => (
         <li key={s.id}>
+          {/* El foco usa el anillo global del sitio (:focus-visible en index.css) */}
           <a
             href={`#${s.id}`}
-            className="flex gap-2 rounded px-2 py-1.5 text-gray-700 no-underline hover:bg-gray-100 hover:text-black focus-visible:outline-2 focus-visible:outline-black"
+            className="flex gap-2 rounded-control px-2 py-1.5 text-tinta no-underline hover:bg-marca-claro"
           >
-            <span className="tabular-nums text-gray-500 w-5 shrink-0 text-right">{i + 1}.</span>
+            <span className="w-5 shrink-0 text-right tabular-nums text-tinta-suave">{i + 1}.</span>
             <span>{s.titulo}</span>
           </a>
         </li>
@@ -85,47 +109,48 @@ function Indice() {
 /** Lista de pares "nombre: detalle" que en pantallas pequeñas reemplaza a una tabla. */
 function Fila({ titulo, children }) {
   return (
-    <li className="py-3 border-b border-gray-100 last:border-b-0">
-      <p className="font-semibold text-gray-950">{titulo}</p>
-      <div className="text-gray-700 mt-0.5">{children}</div>
+    <li className="border-b border-borde py-3 last:border-b-0">
+      <p className="font-semibold text-tinta">{titulo}</p>
+      <div className="mt-0.5">{children}</div>
     </li>
   );
 }
 
 export default function PoliticaDatos() {
-  // Título propio en la pestaña del navegador (WCAG 2.4.2); se restaura al salir
-  useEffect(() => {
-    const anterior = document.title;
-    document.title = "Política de datos personales | Pet Connect";
-    return () => {
-      document.title = anterior;
-    };
-  }, []);
-
   return (
-    <main className="page-enter max-w-6xl mx-auto px-4 py-10 md:py-14">
+    <main className="page-enter mx-auto w-full max-w-5xl px-4 pb-12 pt-8 md:px-6 md:pb-20 md:pt-12">
+      {/* React 19 sube <title> y <meta> al <head> mientras esta página está abierta (§3.6, D11.1).
+          Reemplaza al useEffect que cambiaba document.title: al salir de la página React los quita solo. */}
+      <title>Política de datos personales · PetConnect</title>
+      <meta
+        name="description"
+        content="Cómo PetConnect recoge, usa y protege tus datos personales y cómo ejercer tus derechos (Ley 1581 de 2012)."
+      />
+
       <div className="lg:grid lg:grid-cols-[15rem_minmax(0,1fr)] lg:gap-12">
         <aside className="hidden lg:block" aria-label="Contenido de la política">
           <nav className="sticky top-24">
-            <p className="text-sm font-semibold text-gray-950 mb-2 px-2">En esta página</p>
+            <p className="mb-2 px-2 text-sm font-semibold text-tinta">En esta página</p>
             <Indice />
           </nav>
         </aside>
 
-        <article className="max-w-[68ch] text-base leading-relaxed text-gray-800">
+        {/* Todo el texto legal en tinta (contenido, no dato secundario); 68ch = línea cómoda de leer */}
+        <article className="min-w-0 max-w-[68ch] text-base leading-relaxed text-pretty text-tinta">
           <header className="mb-8">
-            <h1 className="text-3xl md:text-4xl font-bold leading-tight text-gray-950 text-balance">
+            <h1 className="font-display text-3xl font-normal leading-tight tracking-tight text-balance text-tinta md:text-4xl">
               Política de tratamiento de datos personales
             </h1>
-            <p className="mt-3 text-gray-600">
+            <p className="mt-3 text-tinta-suave">
               Versión {VERSION_POLITICA}. Vigente desde: <PorDefinir>fecha de publicación</PorDefinir>.
             </p>
 
+            {/* Mismo aspecto que AvisoDemo (aviso sobre aviso-claro, 6,78:1), sin ámbar a mano */}
             <div
               role="note"
-              className="mt-6 flex gap-3 rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950"
+              className="mt-6 flex gap-3 rounded-control border border-aviso/25 bg-aviso-claro p-4 text-sm text-aviso"
             >
-              <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5 text-amber-700" aria-hidden="true" />
+              <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" aria-hidden="true" />
               <p>
                 <strong>Borrador en revisión.</strong> Este texto todavía no lo ha validado el equipo del
                 proyecto con su instructor. Los datos marcados como “por definir” se completarán antes de
@@ -134,10 +159,11 @@ export default function PoliticaDatos() {
             </div>
           </header>
 
-          {/* Lo primero que alguien necesita saber, en lenguaje sencillo */}
-          <section aria-labelledby="resumen-titulo" className="mb-10 rounded-xl border border-[#6dd5d8]/60 bg-[#6dd5d8]/10 px-5 py-5">
-            <h2 id="resumen-titulo" className="text-lg font-bold text-gray-950 mb-3">En pocas palabras</h2>
-            <ul className="space-y-2 list-disc pl-5 marker:text-gray-400">
+          {/* Lo primero que alguien necesita saber, en lenguaje sencillo. D11.3: el único bloque
+              teñido de la página (marca-claro), sin borde, sin sombra y sin raya de color a un lado. */}
+          <section aria-labelledby="resumen-titulo" className="mb-10 rounded-tarjeta bg-marca-claro px-5 py-5 md:px-6">
+            <h2 id="resumen-titulo" className="mb-3 font-display text-xl font-normal text-tinta md:text-2xl">En pocas palabras</h2>
+            <ul className="list-disc space-y-2 pl-5 marker:text-marca">
               <li>Para crear tu cuenta te pedimos tu nombre, tu correo y una contraseña que nunca guardamos tal cual.</li>
               <li>Los usamos solo para tu cuenta, para enviarte códigos de verificación y para mostrar tus mascotas.</li>
               <li>
@@ -147,13 +173,14 @@ export default function PoliticaDatos() {
               <li>No vendemos tus datos, no te enviamos publicidad y no usamos herramientas de seguimiento.</li>
               <li>
                 Puedes pedir ver, corregir o borrar tus datos cuando quieras: te explicamos cómo en la{" "}
-                <a href="#ejercer-derechos" className="font-medium text-black underline underline-offset-2">sección 8</a>.
+                <a href="#ejercer-derechos" className={ENLACE}>sección 8</a>.
               </li>
             </ul>
           </section>
 
-          <details className="lg:hidden mb-10 rounded-lg border border-gray-200">
-            <summary className="cursor-pointer select-none px-4 py-3 min-h-11 font-semibold text-gray-950 focus-visible:outline-2 focus-visible:outline-black">
+          {/* Índice en celular. El <summary> conserva su triángulo nativo (con display:flex se perdería). */}
+          <details className="mb-10 rounded-tarjeta border border-borde bg-superficie lg:hidden">
+            <summary className="min-h-11 cursor-pointer select-none rounded-tarjeta px-4 py-3 font-semibold text-tinta marker:text-tinta-suave">
               Contenido de la política
             </summary>
             <div className="px-2 pb-3">
@@ -164,23 +191,21 @@ export default function PoliticaDatos() {
           <Seccion id="responsable">
             <p>El responsable del tratamiento de tus datos personales es:</p>
             <dl className="grid grid-cols-1 sm:grid-cols-[11rem_1fr] gap-x-4 gap-y-1 sm:gap-y-3">
-              <dt className="font-semibold text-gray-950">Nombre</dt>
+              <dt className="font-semibold text-tinta">Nombre</dt>
               {/* D.1 completa, decidida por el dueño del proyecto el 06/11/2026 */}
               <dd className="mb-3 sm:mb-0">
                 PetConnect y sus asociados: Daniel Jimenez, Andrea Silva, Nelson Perez y Andrea Yasmin
               </dd>
-              <dt className="font-semibold text-gray-950">Domicilio</dt>
+              {/* Domicilio y dirección: texto legal, se quedan escritos aquí (no salen de CIUDAD) */}
+              <dt className="font-semibold text-tinta">Domicilio</dt>
               <dd className="mb-3 sm:mb-0">Armenia, Quindío, Colombia</dd>
-              <dt className="font-semibold text-gray-950">Dirección física</dt>
+              <dt className="font-semibold text-tinta">Dirección física</dt>
               <dd className="mb-3 sm:mb-0">Cra. 6 # 17 Norte 01, Armenia, Quindío</dd>
-              <dt className="font-semibold text-gray-950">Correo para temas de datos</dt>
-              <dd className="mb-3 sm:mb-0"><CorreoDatos /></dd>
-              <dt className="font-semibold text-gray-950">Teléfono</dt>
+              <dt className="font-semibold text-tinta">Correo para temas de datos</dt>
+              <dd className="mb-3 min-w-0 sm:mb-0"><CorreoDatos /></dd>
+              <dt className="font-semibold text-tinta">Teléfono</dt>
               <dd>
-                <a
-                  href="tel:+573243682078"
-                  className="font-medium text-black underline underline-offset-2 hover:text-gray-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
-                >
+                <a href="tel:+573243682078" className={ENLACE}>
                   324 368 2078
                 </a>
               </dd>
@@ -210,7 +235,7 @@ export default function PoliticaDatos() {
                 ["Encargado", "quien trata datos por cuenta del responsable, por ejemplo el servicio que envía nuestros correos."],
               ].map(([termino, definicion]) => (
                 <div key={termino}>
-                  <dt className="inline font-semibold text-gray-950">{termino}: </dt>
+                  <dt className="inline font-semibold text-tinta">{termino}: </dt>
                   <dd className="inline">{definicion}</dd>
                 </div>
               ))}
@@ -256,7 +281,7 @@ export default function PoliticaDatos() {
           </Seccion>
 
           <Seccion id="finalidades">
-            <ol className="list-decimal pl-6 space-y-2 marker:text-gray-500">
+            <ol className="list-decimal space-y-2 pl-6 marker:text-tinta-suave">
               <li>Crear tu cuenta y permitirte iniciar sesión.</li>
               <li>Verificar que el correo es tuyo y proteger tu cuenta con códigos que te enviamos por correo.</li>
               <li>Enviarte los correos necesarios para usar el servicio: códigos de verificación y bienvenida.</li>
@@ -303,7 +328,7 @@ export default function PoliticaDatos() {
 
           <Seccion id="derechos">
             <p>Como titular tienes derecho a (Ley 1581, art. 8):</p>
-            <ul className="list-disc pl-6 space-y-2 marker:text-gray-400">
+            <ul className="list-disc space-y-2 pl-6 marker:text-tinta-suave">
               <li><strong>Conocer, actualizar y rectificar</strong> tus datos, incluso si están incompletos o son inexactos.</li>
               <li><strong>Pedir prueba</strong> de la autorización que nos diste.</li>
               <li><strong>Saber cómo hemos usado</strong> tus datos, si nos lo preguntas.</li>
@@ -327,19 +352,19 @@ export default function PoliticaDatos() {
               representante, demostrando esa calidad.
             </p>
 
-            <h3 className="text-lg font-semibold text-gray-950 pt-2">Consultas</h3>
+            <h3 className="text-lg font-semibold text-tinta pt-2">Consultas</h3>
             <p>
               Si quieres saber qué datos tenemos o cómo los usamos, te respondemos en máximo{" "}
               <strong>10 días hábiles</strong> desde que recibimos tu mensaje. Si no alcanzamos, te avisamos el motivo
               y te respondemos en máximo <strong>5 días hábiles más</strong> (Ley 1581, art. 14).
             </p>
 
-            <h3 className="text-lg font-semibold text-gray-950 pt-2">Reclamos</h3>
+            <h3 className="text-lg font-semibold text-tinta pt-2">Reclamos</h3>
             <p>
               Si quieres corregir, actualizar o borrar tus datos, revocar la autorización o denunciar un
               incumplimiento (Ley 1581, art. 15):
             </p>
-            <ol className="list-decimal pl-6 space-y-2 marker:font-semibold marker:text-gray-950">
+            <ol className="list-decimal space-y-2 pl-6 marker:font-semibold marker:text-tinta">
               <li>Incluye tu nombre, el correo de tu cuenta, qué pides y por qué, y los documentos que quieras aportar.</li>
               <li>
                 Si falta algo, te lo pedimos dentro de los <strong>5 días</strong> siguientes. Si en{" "}
@@ -379,7 +404,7 @@ export default function PoliticaDatos() {
           </Seccion>
 
           <Seccion id="seguridad">
-            <ul className="list-disc pl-6 space-y-2 marker:text-gray-400">
+            <ul className="list-disc space-y-2 pl-6 marker:text-tinta-suave">
               <li>Las contraseñas se guardan solo como hash bcrypt: nadie del equipo puede verlas.</li>
               <li>Los códigos de verificación vencen a los 10 minutos y se bloquean después de 5 intentos fallidos.</li>
               <li>Limitamos la cantidad de intentos de inicio de sesión y de registro por minuto.</li>
@@ -435,9 +460,9 @@ export default function PoliticaDatos() {
 
           <Seccion id="vigencia">
             <dl className="grid grid-cols-[9rem_1fr] gap-x-4 gap-y-2">
-              <dt className="font-semibold text-gray-950">Versión</dt>
+              <dt className="font-semibold text-tinta">Versión</dt>
               <dd>{VERSION_POLITICA}</dd>
-              <dt className="font-semibold text-gray-950">Vigente desde</dt>
+              <dt className="font-semibold text-tinta">Vigente desde</dt>
               <dd><PorDefinir>fecha de publicación</PorDefinir></dd>
             </dl>
             <p>Las bases de datos estarán vigentes mientras PetConnect preste el servicio.</p>

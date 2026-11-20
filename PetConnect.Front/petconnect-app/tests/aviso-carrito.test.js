@@ -1,200 +1,113 @@
-// Pruebas del ítem 6.4 (A-25): el aviso "X agregado al carrito"
-// (src/assets/js/addToCartToast.js). Se corren con `npm test` (node --test, sin
-// dependencias nuevas: en Node no hay navegador, así que se usa un `document`
-// falso mínimo que solo sabe lo que el aviso necesita).
+// Pruebas del aviso "agregado al carrito" (ítem 6.4 + Fase 5 del rediseño, #19).
+// Se corren con `npm test` (node --test, sin dependencias nuevas).
 //
-// Antes, el aviso se armaba con innerHTML y el nombre del producto dentro: un
-// nombre como "<img src=x onerror=alert(1)>" se convertía en una etiqueta real y
-// su código corría en la página (XSS). Ahora el nombre va con textContent y el
-// ícono se crea con createElementNS. El `document` falso ANOTA cualquier intento
-// de escribir HTML crudo (innerHTML, outerHTML, insertAdjacentHTML).
-import { test, beforeEach, afterEach, mock } from "node:test";
+// Historia: el aviso vivía en src/assets/js/addToCartToast.js y se armaba con
+// el DOM a mano. En el ítem 6.4 (A-25) se quitó el innerHTML: un nombre como
+// "<img src=x onerror=alert(1)>" se convertía en una etiqueta real y su código
+// corría en la página (XSS). En la Fase 5 el aviso pasó a React:
+//   - src/utils/avisoCarrito.js decide QUÉ decir (se prueba aquí directo).
+//   - src/components/AvisoCarrito.jsx lo pinta como TEXTO dentro de una zona
+//     role="status" que siempre existe (así el lector de pantalla lo anuncia).
+// Node no entiende JSX, así que del componente se revisa el código fuente.
+// La guardia de innerHTML en todo src/ se mantiene.
+import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readdirSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
+import {
+  avisar,
+  leerAviso,
+  limpiarAviso,
+  suscribirAviso,
+  textoAviso,
+} from "../src/utils/avisoCarrito.js";
 
-const SVG_NS = "http://www.w3.org/2000/svg";
 const NOMBRE_PELIGROSO = "<img src=x onerror=alert(1)>";
+const SRC = fileURLToPath(new URL("../src", import.meta.url));
+const leer = (ruta) => readFileSync(join(SRC, ruta), "utf8");
 
-let creados = []; // todos los elementos que pidió el aviso
-let htmlCrudo = []; // cada intento de escribir HTML como texto
+// --- Qué dice el aviso ---
 
-class ElementoFalso {
-  constructor(tagName, namespaceURI = null) {
-    this.tagName = tagName;
-    this.namespaceURI = namespaceURI;
-    this.children = [];
-    this.parent = null;
-    this.atributos = new Map();
-    this.style = { cssText: "" };
-    this.escuchas = new Map();
-    this._texto = "";
-    this._clases = [];
-    const clases = this._clases;
-    this.classList = {
-      add: (c) => {
-        if (!clases.includes(c)) clases.push(c);
-      },
-      remove: (c) => {
-        const i = clases.indexOf(c);
-        if (i >= 0) clases.splice(i, 1);
-      },
-      contains: (c) => clases.includes(c),
-    };
-  }
-
-  set className(valor) {
-    this._clases.splice(0, this._clases.length, ...String(valor).split(/\s+/).filter(Boolean));
-  }
-  get className() {
-    return this._clases.join(" ");
-  }
-
-  // textContent: guarda letras, nunca crea etiquetas (como el navegador)
-  set textContent(valor) {
-    this.children = [];
-    this._texto = String(valor);
-  }
-  get textContent() {
-    return this._texto + this.children.map((h) => h.textContent).join("");
-  }
-
-  set innerHTML(valor) {
-    htmlCrudo.push({ en: this.tagName, html: String(valor) });
-  }
-  set outerHTML(valor) {
-    htmlCrudo.push({ en: this.tagName, html: String(valor) });
-  }
-  insertAdjacentHTML(_posicion, valor) {
-    htmlCrudo.push({ en: this.tagName, html: String(valor) });
-  }
-
-  setAttribute(nombre, valor) {
-    this.atributos.set(nombre, String(valor));
-  }
-  getAttribute(nombre) {
-    return this.atributos.has(nombre) ? this.atributos.get(nombre) : null;
-  }
-  appendChild(hijo) {
-    hijo.parent = this;
-    this.children.push(hijo);
-    return hijo;
-  }
-  remove() {
-    if (!this.parent) return;
-    const hermanos = this.parent.children;
-    hermanos.splice(hermanos.indexOf(this), 1);
-    this.parent = null;
-  }
-  addEventListener(tipo, funcion) {
-    this.escuchas.set(tipo, funcion);
-  }
-  disparar(tipo) {
-    this.escuchas.get(tipo)?.();
-  }
-}
-
-function todos(elemento) {
-  return elemento.children.flatMap((h) => [h, ...todos(h)]);
-}
-
-beforeEach(() => {
-  creados = [];
-  htmlCrudo = [];
-  const body = new ElementoFalso("body");
-  globalThis.document = {
-    body,
-    createElement(tag) {
-      const e = new ElementoFalso(tag);
-      creados.push(e);
-      return e;
-    },
-    createElementNS(ns, tag) {
-      const e = new ElementoFalso(tag, ns);
-      creados.push(e);
-      return e;
-    },
-    // Solo entiende ".clase", que es lo que usa el aviso
-    querySelector(selector) {
-      const clase = selector.replace(/^\./, "");
-      return todos(body).find((e) => e.classList.contains(clase)) ?? null;
-    },
-  };
-  mock.timers.enable({ apis: ["setTimeout"] });
+test("agregado: título de éxito; el nombre va aparte, tal cual (como texto)", () => {
+  avisar("agregado", NOMBRE_PELIGROSO, 3);
+  const aviso = leerAviso();
+  assert.equal(aviso.tipo, "exito");
+  assert.equal(aviso.titulo, "Agregado al carrito");
+  assert.equal(aviso.nombre, NOMBRE_PELIGROSO, "el nombre no se transforma ni se interpreta");
+  assert.equal(typeof aviso.nombre, "string");
 });
 
-afterEach(() => {
-  mock.timers.reset();
-  delete globalThis.document;
+test("si no se agregó, el aviso dice por qué (nunca 'agregado')", () => {
+  assert.deepEqual(textoAviso("tope", 3), { tipo: "info", titulo: "Ya tienes las 3 unidades disponibles" });
+  assert.deepEqual(textoAviso("tope", 1), { tipo: "info", titulo: "Ya tienes la única unidad disponible" });
+  assert.deepEqual(textoAviso("agotado", 0), { tipo: "info", titulo: "Este producto está agotado" });
+  assert.equal(textoAviso("lleno", 5).tipo, "info");
+  assert.match(textoAviso("lleno", 5).titulo, /50 productos distintos/);
+  assert.equal(textoAviso("otra-cosa"), null);
 });
 
-const { showAddToCartToast } = await import("../src/assets/js/addToCartToast.js");
-const avisos = () => document.body.children.filter((e) => e.classList.contains("cart-toast"));
-
-test("un nombre con HTML queda como texto: no crea un <img> ni usa HTML crudo", () => {
-  showAddToCartToast(NOMBRE_PELIGROSO);
-  const [aviso] = avisos();
-  assert.ok(aviso, "no se mostró el aviso");
-  const span = aviso.children.find((e) => e.tagName === "span");
-  assert.ok(span, "el texto debe ir en un <span> creado con createElement");
-  assert.equal(span.textContent, `${NOMBRE_PELIGROSO} agregado al carrito`);
-  assert.deepEqual(
-    creados.map((e) => e.tagName).filter((t) => t.toLowerCase() === "img"),
-    [],
-    "no debe crearse ningún <img>",
-  );
-  assert.deepEqual(htmlCrudo, [], "no debe escribirse HTML crudo");
+test("un nombre que no es texto no rompe el aviso", () => {
+  avisar("agregado", undefined, 3);
+  assert.equal(leerAviso().nombre, "");
 });
 
-test("con un nombre normal tampoco se usa innerHTML", () => {
-  showAddToCartToast("Collar reflectivo"); // producto inventado
-  assert.deepEqual(htmlCrudo, []);
-  assert.equal(avisos()[0].textContent, "Collar reflectivo agregado al carrito");
+test("cada aviso lleva un número nuevo, aunque repita el texto (el lector lo vuelve a anunciar)", () => {
+  avisar("agregado", "Collar reflectivo", 3); // producto inventado
+  const primero = leerAviso().n;
+  avisar("agregado", "Collar reflectivo", 3);
+  assert.equal(leerAviso().n, primero + 1);
 });
 
-test("el ícono ✓ es un SVG creado con createElementNS, oculto para lectores; el aviso es role=status", () => {
-  showAddToCartToast("Collar reflectivo");
-  const [aviso] = avisos();
-  assert.equal(aviso.getAttribute("role"), "status");
-  const svg = aviso.children.find((e) => e.tagName === "svg");
-  assert.ok(svg, "falta el ícono");
-  assert.equal(svg.namespaceURI, SVG_NS);
-  assert.equal(svg.getAttribute("aria-hidden"), "true");
-  assert.equal(svg.getAttribute("viewBox"), "0 0 24 24");
-  const [trazo] = svg.children;
-  assert.equal(trazo?.tagName, "path");
-  assert.equal(trazo.namespaceURI, SVG_NS);
-  assert.equal(trazo.getAttribute("d"), "M20 6L9 17l-5-5");
-  // Primero el ícono y después el texto, como antes
-  assert.deepEqual(aviso.children.map((e) => e.tagName), ["svg", "span"]);
+test("limpiarAviso solo borra el aviso que le toca (no uno más nuevo)", () => {
+  avisar("agregado", "Collar reflectivo", 3);
+  const viejo = leerAviso().n;
+  avisar("agregado", "Cama mediana", 3);
+  limpiarAviso(viejo);
+  assert.equal(leerAviso().nombre, "Cama mediana", "el reloj del aviso viejo no borra el nuevo");
+  limpiarAviso(leerAviso().n);
+  assert.equal(leerAviso().titulo, "");
 });
 
-test("un aviso nuevo quita el anterior (solo queda uno)", () => {
-  showAddToCartToast("Collar reflectivo");
-  showAddToCartToast("Cama mediana");
-  const lista = avisos();
-  assert.equal(lista.length, 1);
-  const divs = creados.filter((e) => e.tagName === "div");
-  assert.equal(lista[0], divs.at(-1), "debe quedar el último aviso");
+test("quien escucha se entera de cada aviso y puede dejar de escuchar", () => {
+  let veces = 0;
+  const dejar = suscribirAviso(() => veces++);
+  avisar("agregado", "Collar reflectivo", 3);
+  dejar();
+  avisar("agregado", "Collar reflectivo", 3);
+  assert.equal(veces, 1);
 });
 
-test("a los 2,5 s pasa a la animación de salida y se quita al terminarla", () => {
-  showAddToCartToast("Collar reflectivo");
-  const [aviso] = avisos();
-  assert.ok(aviso.classList.contains("toast-enter"));
-  mock.timers.tick(2499);
-  assert.ok(aviso.classList.contains("toast-enter"), "todavía no debe salir");
-  mock.timers.tick(1);
-  assert.ok(!aviso.classList.contains("toast-enter"));
-  assert.ok(aviso.classList.contains("toast-exit"));
-  aviso.disparar("animationend");
-  assert.equal(avisos().length, 0);
+// --- El componente y su lugar en la página ---
+
+test("addToCartToast.js ya no existe y nadie lo importa", () => {
+  assert.equal(existsSync(join(SRC, "assets/js/addToCartToast.js")), false);
+  const culpables = archivosDeCodigo(SRC)
+    .filter((ruta) => /addToCartToast|showAddToCartToast/.test(sinComentarios(readFileSync(ruta, "utf8"))))
+    .map((ruta) => relative(SRC, ruta));
+  assert.deepEqual(culpables, []);
+});
+
+test("AvisoCarrito: la zona role=\"status\" es lo PRIMERO que se pinta, sin condición", () => {
+  const fuente = leer("components/AvisoCarrito.jsx");
+  // El return abre directo con la caja role="status": existe antes del texto
+  assert.match(fuente, /return \(\s*<div\s+role="status"/);
+  // El nombre va como texto de React ({aviso.nombre}), no como HTML
+  assert.match(fuente, /\{aviso\.nombre\}/);
+});
+
+test("App.jsx monta <AvisoCarrito /> siempre (no dentro de una condición)", () => {
+  const linea = leer("App.jsx").split("\n").find((l) => l.includes("<AvisoCarrito"));
+  assert.ok(linea, "falta <AvisoCarrito /> en App.jsx");
+  assert.equal(linea.trim(), "<AvisoCarrito />");
+});
+
+test("el carrito avisa desde addItem (sabe si de verdad se agregó)", () => {
+  assert.match(leer("context/CartContext.jsx"), /avisar\(r\.resultado, product\.name, r\.maximo\)/);
 });
 
 // --- Guardia: que no vuelva HTML crudo a ningún archivo de la web ---
 
-const SRC = fileURLToPath(new URL("../src", import.meta.url));
 const HTML_CRUDO = /\.innerHTML\b|\.outerHTML\b|insertAdjacentHTML|dangerouslySetInnerHTML|document\.write\(/;
 
 function archivosDeCodigo(carpeta) {
@@ -203,6 +116,11 @@ function archivosDeCodigo(carpeta) {
     if (e.isDirectory()) return archivosDeCodigo(ruta);
     return /\.(js|jsx)$/.test(e.name) ? [ruta] : [];
   });
+}
+
+/** Quita comentarios // y /* *\/ (la historia del aviso viejo se cuenta en comentarios). */
+function sinComentarios(codigo) {
+  return codigo.replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:])\/\/.*$/gm, "$1");
 }
 
 test("ningún archivo de src/ escribe HTML crudo (innerHTML y parecidos)", () => {

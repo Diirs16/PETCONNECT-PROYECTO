@@ -170,9 +170,13 @@ test("AuthContext: logout llama a la API con cerrarSesion y existe un cierre sol
   const contexto = leer("../src/context/AuthContext.jsx");
   assert.match(contexto, /import \{[^}]*\bcerrarSesion\b[^}]*\} from "\.\.\/utils\/sesion"/);
   assert.match(contexto, /\bcerrarSesionEnServidor\b/);
-  assert.match(contexto, /const logout = \(\) =>\s*cerrarSesion\(/);
-  assert.match(contexto, /const cerrarSesionLocal = \(\) =>/);
-  assert.match(contexto, /value=\{\{[\s\S]*\bcerrarSesionLocal\b[\s\S]*\}\}/);
+  // Fase 9 (#32): las funciones van dentro de useCallback y el valor del contexto
+  // en useMemo. Se vigila lo mismo: logout llama a cerrarSesion, existe el cierre
+  // solo local y los dos se entregan en el valor del contexto.
+  assert.match(contexto, /const logout = useCallback\(\(\) =>\s*cerrarSesion\(/);
+  assert.match(contexto, /const cerrarSesionLocal = useCallback\(\(\) =>/);
+  assert.match(contexto, /useMemo\(\s*\(\) => \(\{[\s\S]*\blogout\b[\s\S]*\bcerrarSesionLocal\b[\s\S]*\}\)/);
+  assert.match(contexto, /<AuthContext\.Provider value=\{valor\}>/);
 });
 
 test("FormularioSolicitud: tras un 401 solo cierra en local (no llama a la API)", () => {
@@ -192,4 +196,24 @@ test("Header: los dos botones esperan la API desactivados y avisan si no se conf
   assert.match(header, /role="status"/);
   assert.match(header, /no pudimos confirmarlo con el\s+servidor/);
   assert.match(header, /aria-label="Cerrar aviso"/);
+});
+
+test("Header: la acción se llama 'Cerrar sesión' en escritorio y en el celular (Fase 12, D12.2)", () => {
+  const header = leer("../src/components/Header.jsx");
+  // Un solo nombre en todo el recorrido: "Cerrar sesión" → "Cerrando sesión…" → "Cerraste sesión…"
+  assert.doesNotMatch(header, /"Salir"/);
+  assert.match(header, /cerrando \? "Cerrando sesión…" : "Cerrar sesión"/);
+  assert.match(header, /Cerrar sesión\{" "\}/);
+  assert.match(header, /Cerraste sesión en este navegador/);
+  // Al terminar, el foco va a "Iniciar sesión" (escritorio) o a "Menú" (celular)
+  assert.match(header, /\["cuenta-entrar", "boton-menu"\]/);
+  assert.match(header, /id="cuenta-entrar"/);
+});
+
+test("Header: Escape cierra el menú del celular, salvo que haya una ventana abierta (Fase 12, D12.3)", () => {
+  const header = leer("../src/components/Header.jsx");
+  assert.match(header, /evento\.key !== "Escape"/);
+  assert.match(header, /document\.querySelector\("dialog\[open\]"\)/);
+  assert.match(header, /botonMenuRef\.current\?\.focus\(\)/);
+  assert.match(header, /removeEventListener\("keydown"/);
 });

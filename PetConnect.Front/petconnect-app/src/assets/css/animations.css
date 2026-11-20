@@ -1,327 +1,181 @@
 /* ===== ANIMACIONES PET CONNECT ===== */
+/* Fase 1 del rediseño (§3.4 del reporte de diseño): menos movimiento y con
+   propósito. Se borraron las animaciones que nadie usaba (float, pulse,
+   bounceIn, shimmer, menú móvil, scroll-reveal lateral y de escala).
+   En la Fase 7 se borró lo que solo usaba Adopción: scroll-reveal, stagger-*,
+   hero-title, hero-subtitle, fadeInUp, card-hover, img-zoom y link-animate
+   (junto con useScrollReveal.js y scrollReveal.js).
+   Las que quedan las usan otras páginas y se revisan en su fase.
+   Al final está el bloque de "reducir movimiento" (#12). */
 
 /* --- Keyframes --- */
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes fadeInDown {
-  from {
-    opacity: 0;
-    transform: translateY(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes fadeInLeft {
-  from {
-    opacity: 0;
-    transform: translateX(-30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-@keyframes fadeInRight {
-  from {
-    opacity: 0;
-    transform: translateX(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
+/* Fase 12 (D12.6): se borró fadeInRight (solo lo usaba el aviso de cierre de sesión). */
 
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
 }
 
-@keyframes scaleIn {
-  from {
-    opacity: 0;
-    transform: scale(0.9);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
+/* Fase 9: se borraron scaleIn, backdrop-fade, modal-enter y btn-hover (solo los
+   usaban LoginModal y RegisterModal). Las ventanas de cuenta ahora son un
+   <dialog> con su propia entrada y salida (más abajo, "Ventanas de cuenta"), y
+   la respuesta al presionar es la utilidad "presionable" de index.css (#45). */
 
-@keyframes slideInRight {
-  from { transform: translateX(100%); }
-  to { transform: translateX(0); }
-}
-
-@keyframes slideOutRight {
-  from { transform: translateX(0); }
-  to { transform: translateX(100%); }
-}
-
-@keyframes bounceIn {
-  0% {
-    opacity: 0;
-    transform: scale(0.3);
-  }
-  50% {
-    transform: scale(1.05);
-  }
-  70% {
-    transform: scale(0.95);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-@keyframes pulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-}
-
-@keyframes ripple {
-  to {
-    transform: scale(4);
-    opacity: 0;
-  }
-}
-
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-}
-
-@keyframes floatUp {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-8px); }
-}
-
-@keyframes badgePop {
-  0% { transform: scale(0); }
-  70% { transform: scale(1.2); }
-  100% { transform: scale(1); }
-}
-
-/* --- Scroll Reveal (elementos ocultos hasta entrar al viewport) --- */
-
-.scroll-reveal {
-  opacity: 0;
-  transform: translateY(30px);
-  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
-}
-
-.scroll-reveal.revealed {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.scroll-reveal-left {
-  opacity: 0;
-  transform: translateX(-30px);
-  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
-}
-
-.scroll-reveal-left.revealed {
-  opacity: 1;
-  transform: translateX(0);
-}
-
-.scroll-reveal-right {
-  opacity: 0;
-  transform: translateX(30px);
-  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
-}
-
-.scroll-reveal-right.revealed {
-  opacity: 1;
-  transform: translateX(0);
-}
-
-.scroll-reveal-scale {
-  opacity: 0;
-  transform: scale(0.9);
-  transition: opacity 0.5s ease-out, transform 0.5s ease-out;
-}
-
-.scroll-reveal-scale.revealed {
-  opacity: 1;
-  transform: scale(1);
-}
-
-/* Delays escalonados para grids */
-.stagger-1 { transition-delay: 0.1s; }
-.stagger-2 { transition-delay: 0.2s; }
-.stagger-3 { transition-delay: 0.3s; }
-.stagger-4 { transition-delay: 0.4s; }
-
-/* --- Animaciones de componentes --- */
-
-/* Carrito slide-in */
-.cart-slide-in {
-  animation: slideInRight 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-/* Backdrop fade */
-.backdrop-fade {
-  animation: fadeIn 0.25s ease-out forwards;
-}
-
-/* Modales */
-.modal-enter {
-  animation: scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-/* Hero */
-.hero-title {
-  animation: fadeInUp 0.8s ease-out forwards;
-}
-
-.hero-subtitle {
-  animation: fadeInUp 0.8s ease-out 0.15s both;
-}
-
-.hero-buttons {
-  animation: fadeInUp 0.8s ease-out 0.3s both;
-}
-
-/* Badge del carrito */
-.cart-badge {
-  animation: badgePop 0.3s ease-out forwards;
-}
-
-/* Efecto float para CTA */
-.float-animation {
-  animation: floatUp 3s ease-in-out infinite;
-}
-
-/* --- Hover effects --- */
-
-.card-hover {
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.card-hover:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
-}
-
-.btn-hover {
-  position: relative;
-  overflow: hidden;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.btn-hover:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-.btn-hover:active {
-  transform: translateY(0);
-  box-shadow: none;
-}
-
-/* Ripple en botones */
-.btn-ripple {
-  position: relative;
-  overflow: hidden;
-}
-
-.btn-ripple .ripple-effect {
-  position: absolute;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.4);
-  transform: scale(0);
-  animation: ripple 0.6s linear;
-  pointer-events: none;
-}
-
-/* Imagen zoom on hover */
-.img-zoom {
-  overflow: hidden;
-}
-
-.img-zoom img {
-  transition: transform 0.4s ease;
-}
-
-.img-zoom:hover img {
-  transform: scale(1.05);
-}
-
-/* Link underline animation */
-.link-animate {
-  position: relative;
-}
-
-.link-animate::after {
-  content: '';
-  position: absolute;
-  bottom: -2px;
-  left: 0;
-  width: 0;
-  height: 2px;
-  background: currentColor;
-  transition: width 0.3s ease;
-}
-
-.link-animate:hover::after {
-  width: 100%;
-}
-
-/* --- Page transitions --- */
+/* --- Entrada de página --- */
+/* Solo un fundido corto: la navegación es frecuente y el desplazamiento
+   cansaba (§3.4, "dónde no"). */
 
 .page-enter {
-  animation: fadeInUp 0.4s ease-out forwards;
+  animation: fadeIn 120ms ease-out both;
 }
 
-/* --- Menú mobile --- */
-
-.mobile-menu-enter {
-  animation: fadeInDown 0.25s ease-out forwards;
+/* --- Carrito lateral (Fase 5, §3.4 #1) --- */
+/* CartModal es un <dialog>. Mientras haya uno abierto, la página de atrás no se
+   desplaza (#1); scrollbar-gutter guarda el espacio de la barra para que la
+   página no salte de lado. También vale para LoginModal y RegisterModal (Fase 9). */
+html:has(dialog[open]) {
+  overflow: hidden;
+  scrollbar-gutter: stable;
 }
 
-.mobile-menu-item {
-  opacity: 0;
-  animation: fadeInLeft 0.3s ease-out forwards;
+/* Fondo oscuro: la tinta al 45 % (no negro), sin colores escritos a mano */
+.carrito-dialogo::backdrop {
+  background: color-mix(in srgb, var(--color-tinta) 45%, transparent);
 }
 
-.mobile-menu-item:nth-child(1) { animation-delay: 0.05s; }
-.mobile-menu-item:nth-child(2) { animation-delay: 0.1s; }
-.mobile-menu-item:nth-child(3) { animation-delay: 0.15s; }
-.mobile-menu-item:nth-child(4) { animation-delay: 0.2s; }
-.mobile-menu-item:nth-child(5) { animation-delay: 0.25s; }
-
-/* --- Skeleton loader (shimmer) --- */
-
-.skeleton {
-  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
-  border-radius: 4px;
+/* Entra y SALE por el mismo borde (antes desaparecía de golpe). La salida es
+   la clase "cerrando": CartModal espera 240 ms antes de cerrar el <dialog>. */
+@keyframes carrito-entra {
+  from { transform: translateX(100%); }
 }
 
-/* --- Notification toast --- */
-
-.toast-enter {
-  animation: fadeInRight 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+@media (prefers-reduced-motion: no-preference) {
+  .carrito-dialogo[open] {
+    animation: carrito-entra 240ms var(--ease-drawer);
+  }
+  .carrito-dialogo[open]::backdrop {
+    animation: fadeIn 200ms var(--ease-out);
+  }
+  .carrito-dialogo.cerrando {
+    transform: translateX(100%);
+    transition: transform 240ms var(--ease-drawer);
+  }
+  .carrito-dialogo.cerrando::backdrop {
+    opacity: 0;
+    transition: opacity 200ms var(--ease-out);
+  }
 }
 
-.toast-exit {
-  animation: slideOutRight 0.3s ease-in forwards;
+/* Con "reducir movimiento" el carrito no se desplaza, solo un fundido de 150 ms */
+@media (prefers-reduced-motion: reduce) {
+  .carrito-dialogo[open],
+  .carrito-dialogo[open]::backdrop {
+    animation: fadeIn 150ms ease-out;
+  }
+  .carrito-dialogo.cerrando,
+  .carrito-dialogo.cerrando::backdrop {
+    opacity: 0;
+    transition: opacity 150ms ease-in;
+  }
+}
+
+/* --- Ventanas de cuenta: iniciar sesión y crear cuenta (Fase 9, §3.4 #4) --- */
+/* LoginModal y RegisterModal usan DialogoCuenta.jsx (un <dialog>). Entran
+   creciendo de 0,96 a 1 con fundido en 200 ms y salen en 150 ms (más rápido que
+   la entrada): la clase "cerrando" dura lo mismo que DURACION_SALIDA_MS. El fondo
+   es el mismo del carrito: la tinta al 45 %. */
+.cuenta-dialogo::backdrop {
+  background: color-mix(in srgb, var(--color-tinta) 45%, transparent);
+}
+
+@keyframes cuenta-entra {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .cuenta-dialogo[open] {
+    animation: cuenta-entra 200ms var(--ease-out);
+  }
+  .cuenta-dialogo[open]::backdrop {
+    animation: fadeIn 200ms var(--ease-out);
+  }
+  .cuenta-dialogo.cerrando {
+    opacity: 0;
+    transform: scale(0.96);
+    transition: opacity 150ms var(--ease-out), transform 150ms var(--ease-out);
+  }
+  .cuenta-dialogo.cerrando::backdrop {
+    opacity: 0;
+    transition: opacity 150ms var(--ease-out);
+  }
+}
+
+/* Con "reducir movimiento" no cambia de tamaño: solo un fundido de 150 ms */
+@media (prefers-reduced-motion: reduce) {
+  .cuenta-dialogo[open],
+  .cuenta-dialogo[open]::backdrop {
+    animation: fadeIn 150ms ease-out;
+  }
+  .cuenta-dialogo.cerrando,
+  .cuenta-dialogo.cerrando::backdrop {
+    opacity: 0;
+    transition: opacity 150ms ease-in;
+  }
+}
+
+/* --- Pulso del contador del carrito (Fase 5, §3.4 #3) --- */
+/* 1 → 1,12 → 1 en 200 ms cuando cambia la cantidad (Header.jsx). Con
+   "reducir movimiento" no hay pulso: la regla solo existe en no-preference. */
+@keyframes contador-pulso {
+  50% { transform: scale(1.12); }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .contador-pulso {
+    animation: contador-pulso 200ms var(--ease-out);
+  }
+}
+
+/* --- Celebración de la solicitud de adopción (Fase 8, §3.4 #5) --- */
+/* Único momento de "alegría" de la web: es raro y emotivo. Al llegar el 201,
+   el ícono de check crece de 0,8 a 1 con un resorte suave (400 ms; la curva se
+   pasa un poco de 1 y vuelve) y el texto aparece con un fundido de 200 ms.
+   Solo en adopción (FormularioSolicitud.jsx), no en contacto (D8.5).
+   Con "reducir movimiento" no hay regla: el mensaje solo aparece (D8.6).
+   Descartado linear(): el resorte de cubic-bezier basta y lo entiende todo navegador. */
+@keyframes celebracion-icono {
+  from { transform: scale(0.8); }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .celebracion-icono {
+    animation: celebracion-icono 400ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .celebracion-texto {
+    animation: fadeIn 200ms var(--ease-out);
+  }
+}
+
+/* --- Aviso de cierre de sesión sin confirmar (Header.jsx, ítem 4.13) --- */
+/* El aviso "agregado al carrito" ya no usa clases: es AvisoCarrito.jsx (Fase 5). */
+
+/* Fase 12 (D12.6): antes entraba deslizándose desde la derecha (toast-enter), un
+   movimiento que §3.4 no tiene. Ahora es un fundido corto, sin desplazamiento, así
+   que sirve igual con "reducir movimiento". */
+.aviso-entra {
+  animation: fadeIn 150ms var(--ease-out) both;
+}
+
+/* --- Reducir movimiento (#12) --- */
+/* Si la persona activó "reducir movimiento" en su sistema, nada se desplaza
+   ni cambia de tamaño: los desplazamientos se vuelven un fundido corto.
+   El carrito y su contador tienen su propio bloque, junto a su animación. */
+
+@media (prefers-reduced-motion: reduce) {
+  .page-enter {
+    animation: fadeIn 150ms ease-out both;
+  }
 }

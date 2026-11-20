@@ -1,28 +1,97 @@
 @import "tailwindcss";
+/* Fuentes alojadas en el proyecto (decisión D1 del rediseño): no se piden a
+   Google, así la IP de quien visita no sale a un tercero (Ley 1581).
+   Licencia de ambas: OFL-1.1. */
+@import "@fontsource/young-serif/400.css";
+@import "@fontsource-variable/figtree/wght.css";
 @import "./assets/css/animations.css";
 
+/* Tokens de la dirección "Refugio cálido" (§4.3 del reporte de diseño).
+   Contraste comprobado con la fórmula WCAG. En los componentes se usan
+   estos nombres (bg-papel, text-tinta, border-borde…), nunca hex a mano. */
 @theme {
-  --font-sans: 'Segoe UI', system-ui, Roboto, sans-serif;
-  --color-primary: #111111;
-  --color-secondary: #555555;
-  --color-accent: #222222;
-  --color-light: #f5f5f5;
-  --color-border: #d1d1d1;
-  --color-success: #2d7a3a;
-  --color-danger: #c0392b;
-  --color-warning: #e67e22;
+  /* Fuentes. Young Serif solo tiene grosor 400: los títulos van en font-normal. */
+  --font-display: "Young Serif", Georgia, serif;
+  --font-sans: "Figtree Variable", "Segoe UI", system-ui, sans-serif;
+
+  /* Colores */
+  --color-papel: #fbf7f1;         /* fondo de página */
+  --color-superficie: #ffffff;    /* tarjetas, modales, encabezado */
+  --color-tinta: #1e2a2f;         /* texto principal · 13,78:1 sobre papel */
+  --color-tinta-suave: #55636a;   /* texto secundario · 5,82:1 sobre papel */
+  --color-marca: #1d6b74;         /* turquesa: botón principal, enlaces, foco */
+  --color-marca-hover: #165860;
+  --color-marca-claro: #e3f1f1;
+  --color-acento: #b4532a;        /* terracota: adopción · blanco encima 4,99:1 */
+  --color-acento-oscuro: #8e3f1e;
+  --color-acento-claro: #fbebdd;
+  --color-borde: #e6ded3;         /* divisores decorativos */
+  --color-borde-fuerte: #8c8178;  /* contorno de campos · 3,56:1 sobre papel */
+  --color-exito: #2f7a45;
+  --color-error: #b42318;
+  --color-aviso: #7a4a00;
+  --color-aviso-claro: #fdf3dc;
+  --color-noche: #14201f;         /* pie de página */
+  /* Colores claros para usar SOLO sobre noche (Fase 2). Contraste sobre #14201f: */
+  --color-noche-texto: #b9c4c2;   /* texto y enlaces del pie · 9,34:1 */
+  --color-noche-marca: #7fd3d6;   /* "Pet" del logo y contorno de foco · 9,71:1 */
+  --color-noche-acento: #e8733a;  /* "Connect" del logo (naranja del logo) · 5,53:1 */
+  /* Ojo: el foco general (marca) sobre noche da 2,71:1, menos del 3:1 pedido;
+     por eso dentro del pie el foco usa noche-marca. */
+
+  /* Radios: solo tres (+ rounded-full para chips y botones de ícono) */
+  --radius-control: 0.625rem;     /* 10 px: botones, campos */
+  --radius-tarjeta: 1rem;         /* 16 px: tarjetas, carrito, modales */
+
+  /* Sombras: solo dos, del color de la tinta (no negro) */
+  --shadow-tarjeta: 0 1px 2px rgb(30 42 47 / 0.06), 0 4px 12px rgb(30 42 47 / 0.06);
+  --shadow-elevada: 0 12px 32px rgb(30 42 47 / 0.14);
+
+  /* Curvas de movimiento (§3.4) */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
 }
 
-body {
-  margin: 0;
-  font-family: var(--font-sans);
-  color: var(--color-primary);
-  background: #ffffff;
-  -webkit-font-smoothing: antialiased;
+@layer base {
+  body {
+    margin: 0;
+    font-family: var(--font-sans);
+    color: var(--color-tinta);
+    background: var(--color-papel);
+    -webkit-font-smoothing: antialiased;
+    /* Young Serif no trae negrita: que el navegador no invente una falsa */
+    font-synthesis-weight: none;
+  }
+
+  #root {
+    min-height: 100vh;  /* respaldo para navegadores viejos */
+    min-height: 100dvh; /* alto visible real en celular (#44) */
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Foco visible igual en todo el sitio (teclado) */
+  :focus-visible {
+    outline: 2px solid var(--color-marca);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background: var(--color-marca-claro);
+    color: var(--color-tinta);
+  }
 }
 
-#root {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
+/* Respuesta al presionar (§3.4 #2): el botón se encoge un poco mientras se
+   presiona. Con "reducir movimiento" no se mueve. Uso: className="presionable". */
+@utility presionable {
+  transition-property: transform, background-color, color;
+  transition-duration: 160ms;
+  transition-timing-function: var(--ease-out);
+
+  @media (prefers-reduced-motion: no-preference) {
+    &:active {
+      transform: scale(0.97);
+    }
+  }
 }

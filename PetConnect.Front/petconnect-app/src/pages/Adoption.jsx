@@ -1,13 +1,14 @@
-import { Link } from "react-router-dom";
+import { useRef } from "react";
 import { getMascotasAdopcion } from "../services/api";
-import { Heart } from "lucide-react";
-import { useScrollReveal } from "../assets/js/useScrollReveal";
 import EstadoCarga from "../components/EstadoCarga";
 import BotonVerMas from "../components/BotonVerMas";
+import TarjetaMascota from "../components/TarjetaMascota";
 import { useListaPaginada } from "../hooks/useListaPaginada";
-import { datosMascota } from "../utils/mascota";
 import { POR_PAGINA_ADOPCION } from "../utils/paginacion";
 
+// Fase 7 del rediseño: tokens de "Refugio cálido", tarjeta propia de mascota
+// (TarjetaMascota.jsx) y sin título animado ni aparición al hacer scroll
+// (§3.4: es una página de trabajo, no de presentación).
 export default function Adoption() {
   // 3.3 (A-23, NC-009): la lista sale SOLO de la API. Antes empezaba con 6
   // mascotas inventadas y, si la API fallaba o no traía nada, las dejaba en
@@ -22,92 +23,82 @@ export default function Adoption() {
     cargandoMas,
     errorMas,
   } = useListaPaginada(getMascotasAdopcion, POR_PAGINA_ADOPCION);
+  const tituloRef = useRef(null);
+  // Fase 12 (D12.4): "Ver más" lleva el foco a la primera mascota nueva de esta lista
+  const listaRef = useRef(null);
 
-  useScrollReveal();
+  // Al pulsar "Reintentar" el botón desaparece y el foco caería al inicio de la
+  // página. Se pasa al título para que quien usa teclado siga en el mismo lugar
+  // (igual que en Checkout, Fase 6).
+  const reintentarYEnfocar = () => {
+    reintentar();
+    tituloRef.current?.focus();
+  };
 
   return (
-    <main className="page-enter max-w-7xl mx-auto px-4 py-8">
-      <div className="text-center mb-10">
-        <h1 className="hero-title text-2xl md:text-3xl font-bold mb-3">
-          Mascotas en Adopción
-        </h1>
-        <p className="hero-subtitle text-gray-500 max-w-xl mx-auto">
-          Conoce a las mascotas que buscan un hogar lleno de amor. Cada una de
-          ellas merece una familia.
-        </p>
+    <main className="page-enter mx-auto w-full max-w-7xl px-4 pb-12 pt-8 md:px-6 md:pb-20 md:pt-12">
+      {/* React 19 sube <title> y <meta> al <head> mientras esta página está abierta (§3.6) */}
+      <title>Mascotas en adopción · PetConnect</title>
+      <meta
+        name="description"
+        content="Perros y gatos que buscan familia. Mira su ficha y envía tu solicitud en línea."
+      />
+
+      {/* tabIndex -1: recibe el foco tras "Reintentar", pero no es un control (sin contorno) */}
+      <h1
+        ref={tituloRef}
+        tabIndex={-1}
+        className="font-display text-3xl font-normal tracking-tight text-balance text-tinta outline-none md:text-4xl"
+      >
+        Mascotas en adopción
+      </h1>
+      <p className="mt-2 max-w-[60ch] text-base text-pretty text-tinta-suave">
+        Perros y gatos que buscan familia. Mira su ficha y envía tu solicitud en línea.
+      </p>
+
+      <div className="mt-8">
+        {estado === "cargando" && (
+          <EstadoCarga tipo="cargando" titulo="Cargando mascotas en adopción…" />
+        )}
+
+        {estado === "error" && (
+          <EstadoCarga
+            tipo="error"
+            titulo="No pudimos cargar las mascotas en adopción"
+            onReintentar={reintentarYEnfocar}
+          >
+            Revisa tu conexión o inténtalo de nuevo en unos minutos.
+          </EstadoCarga>
+        )}
+
+        {estado === "listo" && pets.length === 0 && (
+          <EstadoCarga tipo="vacio" titulo="Por ahora no hay mascotas en adopción">
+            Vuelve pronto: cuando un refugio publique una mascota, aparecerá aquí.
+          </EstadoCarga>
+        )}
+
+        {estado === "listo" && pets.length > 0 && (
+          // 1 columna en el celular (la foto manda), 2 desde 640 px, 3 desde 1024 y 4 desde 1280.
+          <ul ref={listaRef} className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {pets.map((pet) => (
+              <li key={pet.id}>
+                <TarjetaMascota pet={pet} />
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {estado === "listo" && (
+          <BotonVerMas
+            hayMas={hayMas}
+            cargando={cargandoMas}
+            error={errorMas}
+            onVerMas={verMas}
+            texto="Ver más mascotas"
+            listaRef={listaRef}
+          />
+        )}
       </div>
-
-      {estado === "cargando" && (
-        <EstadoCarga tipo="cargando" titulo="Cargando mascotas en adopción…" />
-      )}
-
-      {estado === "error" && (
-        <EstadoCarga
-          tipo="error"
-          titulo="No pudimos cargar las mascotas en adopción"
-          onReintentar={reintentar}
-        >
-          Revisa tu conexión o inténtalo de nuevo en unos minutos.
-        </EstadoCarga>
-      )}
-
-      {estado === "listo" && pets.length === 0 && (
-        <EstadoCarga tipo="vacio" titulo="Por ahora no hay mascotas en adopción">
-          Vuelve pronto: cuando un refugio publique una mascota, aparecerá aquí.
-        </EstadoCarga>
-      )}
-
-      {estado === "listo" && pets.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {pets.map((pet, i) => (
-            <div
-              key={pet.id}
-              className={`scroll-reveal stagger-${(i % 3) + 1} card-hover border border-gray-200 rounded-lg overflow-hidden bg-white`}
-            >
-              <Link to={`/adopcion/${pet.id}`} className="block img-zoom">
-                <img
-                  src={pet.image}
-                  alt={pet.name}
-                  className="w-full h-56 object-cover"
-                  loading="lazy"
-                />
-              </Link>
-              <div className="p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <Link
-                    to={`/adopcion/${pet.id}`}
-                    className="link-animate text-lg font-bold text-black no-underline"
-                  >
-                    {pet.name}
-                  </Link>
-                  <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
-                    {pet.species}
-                  </span>
-                </div>
-                {/* 3.4 (A-22): raza, edad y sexo formateados; sin tamaño (la BD no lo tiene). */}
-                <p className="text-sm text-gray-500 mb-3">{datosMascota(pet)}</p>
-                <Link
-                  to={`/adopcion/${pet.id}`}
-                  className="btn-hover w-full flex items-center justify-center gap-2 border-2 border-black text-black py-2 rounded-lg text-sm font-medium hover:bg-black hover:text-white transition-colors no-underline"
-                >
-                  <Heart className="w-4 h-4" />
-                  Conocer más
-                </Link>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {estado === "listo" && (
-        <BotonVerMas
-          hayMas={hayMas}
-          cargando={cargandoMas}
-          error={errorMas}
-          onVerMas={verMas}
-          texto="Ver más mascotas"
-        />
-      )}
     </main>
   );
 }

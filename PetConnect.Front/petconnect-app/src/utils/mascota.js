@@ -19,10 +19,15 @@ export function formatearSexo(gender) {
   return SEXOS[gender] ?? null;
 }
 
-/** Línea "Raza · Edad · Sexo" con solo los datos que se conocen ("" si no hay ninguno). */
-export function datosMascota(pet) {
+/**
+ * Fase 7 del rediseño: los rasgos como lista, para mostrarlos como etiquetas
+ * en la tarjeta de adopción. ["Raza", "Edad", "Sexo"] solo con lo que se
+ * conoce; [] si no se sabe ninguno (así la tarjeta no deja un renglón vacío).
+ */
+export function rasgosMascota(pet) {
   const raza = typeof pet?.breed === "string" ? pet.breed.trim() : "";
-  return [raza, formatearEdad(pet?.age), formatearSexo(pet?.gender)]
-    .filter(Boolean)
-    .join(" · ");
+  return [raza, formatearEdad(pet?.age), formatearSexo(pet?.gender)].filter(Boolean);
 }
+
+// Fase 12 (D12.7): se borró datosMascota (la línea "Raza · Edad · Sexo"); ninguna
+// página la usaba desde la Fase 8. La tarjeta y la ficha usan rasgosMascota.

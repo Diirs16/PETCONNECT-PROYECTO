@@ -2,7 +2,31 @@
 // Lo que no se sabe no se muestra: la función devuelve null o lo salta.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { formatearEdad, formatearSexo, datosMascota } from "../src/utils/mascota.js";
+import { formatearEdad, formatearSexo, rasgosMascota } from "../src/utils/mascota.js";
+
+// Fase 7 del rediseño: los mismos datos, pero como lista (etiquetas de la tarjeta).
+test("los rasgos salen como lista, solo con lo que se conoce", () => {
+  assert.deepEqual(rasgosMascota({ breed: " Criollo ", age: 2, gender: "hembra" }), [
+    "Criollo",
+    "2 años",
+    "Hembra",
+  ]);
+  assert.deepEqual(rasgosMascota({ breed: null, age: 0, gender: "no_definido" }), ["Menos de 1 año"]);
+  assert.deepEqual(rasgosMascota({ breed: "", age: 25, gender: "macho" }), ["25 años", "Macho"]);
+});
+
+test("sin ningún rasgo conocido la lista queda vacía (no hay renglón vacío)", () => {
+  assert.deepEqual(rasgosMascota({ breed: "  ", age: null, gender: "no_definido" }), []);
+  assert.deepEqual(rasgosMascota({}), []);
+  assert.deepEqual(rasgosMascota(null), []);
+});
+
+test("los rasgos no incluyen la especie, tamaño, vacunación ni esterilización", () => {
+  assert.deepEqual(
+    rasgosMascota({ breed: "Mestizo", age: 4, gender: "macho", species: "Perro", size: "Grande", vaccinated: true }),
+    ["Mestizo", "4 años", "Macho"],
+  );
+});
 
 test("la edad se escribe en años y 0 es 'Menos de 1 año'", () => {
   assert.equal(formatearEdad(0), "Menos de 1 año");
@@ -25,26 +49,6 @@ test("el sexo empieza en mayúscula y 'no_definido' no se muestra", () => {
   }
 });
 
-test("la línea de datos junta solo lo que se conoce", () => {
-  assert.equal(
-    datosMascota({ breed: "Labrador", age: 2, gender: "hembra" }),
-    "Labrador · 2 años · Hembra",
-  );
-  assert.equal(datosMascota({ breed: "Siamés", age: 0, gender: "macho" }), "Siamés · Menos de 1 año · Macho");
-  // Sin raza ni sexo definido: no quedan separadores sueltos.
-  assert.equal(datosMascota({ breed: null, age: 3, gender: "no_definido" }), "3 años");
-  assert.equal(datosMascota({ breed: "  ", age: null, gender: "no_definido" }), "");
-  assert.equal(datosMascota(null), "");
-});
-
-test("la línea de datos no incluye tamaño, vacunación ni esterilización", () => {
-  const texto = datosMascota({
-    breed: "Mestizo",
-    age: 4,
-    gender: "macho",
-    size: "Grande",
-    vaccinated: true,
-    sterilized: false,
-  });
-  assert.equal(texto, "Mestizo · 4 años · Macho");
-});
+// Fase 12 (D12.7): se borraron las dos pruebas de datosMascota junto con la función.
+// Que no salgan tamaño, vacunación ni esterilización lo sigue vigilando la prueba
+// "los rasgos no incluyen la especie, tamaño, vacunación ni esterilización".

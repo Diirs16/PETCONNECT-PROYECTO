@@ -1,26 +1,37 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, ShoppingCart, Check } from "lucide-react";
+import { ArrowLeft, CircleCheck, Package, PackageX, ShoppingCart } from "lucide-react";
 import { getProducto } from "../services/api";
 import EstadoCarga from "../components/EstadoCarga";
-import { useCart } from "../context/CartContext";
-import { addRipple } from "../assets/js/rippleEffect";
-import { showAddToCartToast } from "../assets/js/addToCartToast";
+import FotoConRespaldo from "../components/FotoConRespaldo";
+import { useCart } from "../context/useCart";
+import { formatearPrecio } from "../utils/precio";
+import { resumir } from "../utils/texto";
 
-function formatPrice(price) {
-  return new Intl.NumberFormat("es-CO", {
-    style: "currency",
-    currency: "COP",
-    minimumFractionDigits: 0,
-  }).format(price);
+// Fase 4 del rediseño: ficha de producto sobria (la emotiva será la de mascota,
+// Fase 8). Solo muestra lo que manda la API: foto, nombre, precio, categoría,
+// stock y descripción. Antes tenía "Nuevo", "-20 %" y precio anterior, que la
+// BD no tiene (#41), y una palomita verde también cuando decía "Agotado" (#31).
+
+const NUMERO = new Intl.NumberFormat("es-CO");
+
+/** 1 → "1 unidad disponible"; 1500 → "1.500 unidades disponibles". */
+function textoDisponible(stock) {
+  const n = Number(stock);
+  return n === 1 ? "1 unidad disponible" : `${NUMERO.format(n)} unidades disponibles`;
+}
+
+/** Texto limpio o "" si no es texto (la API podría mandar null). */
+function textoLimpio(valor) {
+  return typeof valor === "string" ? valor.trim() : "";
 }
 
 const VOLVER_CATALOGO = (
   <Link
     to="/catalogo"
-    className="inline-flex min-h-11 items-center gap-1 rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-medium text-black no-underline hover:bg-gray-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
+    className="presionable inline-flex min-h-11 items-center gap-2 rounded-control border border-borde-fuerte bg-superficie px-5 text-base font-semibold text-tinta no-underline hover:border-marca hover:text-marca"
   >
-    <ArrowLeft className="w-4 h-4" aria-hidden="true" />
+    <ArrowLeft className="h-4 w-4" aria-hidden="true" />
     Volver al catálogo
   </Link>
 );
@@ -28,125 +39,186 @@ const VOLVER_CATALOGO = (
 export default function ProductDetail() {
   const { id } = useParams();
   const { addItem } = useCart();
-  const [product, setProduct] = useState(null);
   // 3.3 (A-23): "no-encontrado" solo si la API respondió 404; cualquier otro
   // fallo es "error". Antes, si la API fallaba, se mostraba un producto
   // inventado de data/products.js que hasta se podía agregar al carrito.
-  const [estado, setEstado] = useState("cargando"); // "cargando" | "no-encontrado" | "error" | "listo"
+  // Fase 4: la respuesta se guarda junto con la "pedida" (id + intento) que la
+  // trajo. Si la URL cambia a otro producto, la respuesta guardada ya no es de
+  // esa pedida y la página dice "cargando" (antes seguía mostrando el producto
+  // o el error anterior mientras llegaba el nuevo).
   const [intento, setIntento] = useState(0); // al sumar 1, se vuelve a pedir la ficha
+  const pedida = `${id}#${intento}`;
+  const [respuesta, setRespuesta] = useState({ pedida: null, estado: "cargando", product: null });
+  const estado = respuesta.pedida === pedida ? respuesta.estado : "cargando"; // "cargando" | "no-encontrado" | "error" | "listo"
+  const product = respuesta.product;
 
   useEffect(() => {
     let vigente = true; // evita actualizar la página si el usuario ya se fue
     getProducto(id)
       .then((data) => {
-        if (!vigente) return;
-        setProduct(data);
-        setEstado("listo");
+        if (vigente) setRespuesta({ pedida, estado: "listo", product: data });
       })
       .catch((e) => {
-        if (vigente) setEstado(e.status === 404 ? "no-encontrado" : "error");
+        if (vigente) setRespuesta({ pedida, estado: e.status === 404 ? "no-encontrado" : "error", product: null });
       });
     return () => {
       vigente = false;
     };
-  }, [id, intento]);
+  }, [id, pedida]);
 
   function reintentar() {
-    setEstado("cargando");
-    setIntento((n) => n + 1);
+    setIntento((n) => n + 1); // cambia la pedida: se ve "cargando" y se vuelve a pedir
   }
 
   if (estado !== "listo") {
     return (
-      <main className="max-w-7xl mx-auto px-4 py-16">
-        {estado === "cargando" && <EstadoCarga tipo="cargando" encabezado="h1" titulo="Cargando producto…" />}
+      <main className="mx-auto w-full max-w-7xl px-4 py-16 md:px-6">
+        {estado === "cargando" && (
+          <>
+            <title>Cargando producto · PetConnect</title>
+            <EstadoCarga tipo="cargando" encabezado="h1" titulo="Cargando producto…" />
+          </>
+        )}
         {estado === "no-encontrado" && (
-          <EstadoCarga tipo="vacio" encabezado="h1" titulo="Producto no encontrado" accion={VOLVER_CATALOGO}>
-            Puede que ya no esté disponible en el catálogo.
-          </EstadoCarga>
+          <>
+            <title>Producto no encontrado · PetConnect</title>
+            {/* Que los buscadores no guarden una ficha que no existe */}
+            <meta name="robots" content="noindex" />
+            <EstadoCarga tipo="vacio" encabezado="h1" titulo="Producto no encontrado" accion={VOLVER_CATALOGO}>
+              Puede que ya no esté disponible en el catálogo.
+            </EstadoCarga>
+          </>
         )}
         {estado === "error" && (
-          <EstadoCarga
-            tipo="error"
-            encabezado="h1"
-            titulo="No pudimos cargar este producto"
-            onReintentar={reintentar}
-            accion={VOLVER_CATALOGO}
-          >
-            Revisa tu conexión o inténtalo de nuevo en unos minutos.
-          </EstadoCarga>
+          <>
+            <title>No pudimos cargar el producto · PetConnect</title>
+            <EstadoCarga
+              tipo="error"
+              encabezado="h1"
+              titulo="No pudimos cargar este producto"
+              onReintentar={reintentar}
+              accion={VOLVER_CATALOGO}
+            >
+              Revisa tu conexión o inténtalo de nuevo en unos minutos.
+            </EstadoCarga>
+          </>
         )}
       </main>
     );
   }
 
+  const precio = formatearPrecio(product.price);
+  const categoria = textoLimpio(product.category);
+  const descripcion = textoLimpio(product.description);
+  // Misma regla que la tarjeta (#6): stock 0 o "0" es agotado. Si la API no
+  // mandara stock, no se bloquea y no se muestra la fila de disponibilidad.
+  const agotado = Number(product.stock) <= 0;
+  const conStock = agotado || Number.isFinite(Number(product.stock));
+  // §3.6: la descripción de la pestaña son las primeras 150 letras.
+  const descripcionMeta = resumir(descripcion, 150) || `${product.name}, en el catálogo de PetConnect.`;
+
+  const handleAdd = () => {
+    if (agotado) return; // doble barrera: el botón ya viene desactivado
+    addItem(product);
+  };
+
   return (
-    <main className="page-enter max-w-7xl mx-auto px-4 py-8">
+    <main className="page-enter mx-auto w-full max-w-7xl px-4 pb-16 pt-4 md:px-6 md:pt-6">
+      {/* React 19 sube <title> y <meta> al <head> mientras la ficha está abierta (§3.6) */}
+      <title>{`${product.name} · PetConnect`}</title>
+      <meta name="description" content={descripcionMeta} />
+
       <Link
         to="/catalogo"
-        className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-black no-underline mb-6"
+        className="-ml-2 inline-flex min-h-11 items-center gap-2 rounded-control px-2 text-base text-tinta-suave no-underline hover:text-marca"
       >
-        <ArrowLeft className="w-4 h-4" />
+        <ArrowLeft className="h-4 w-4" aria-hidden="true" />
         Volver al catálogo
       </Link>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div className="relative">
-          <img
-            src={product.image}
-            alt={product.name}
-            className="w-full aspect-square object-cover rounded-lg border border-gray-200"
-          />
-          {product.isNew && (
-            <span className="absolute top-3 left-3 bg-black text-white text-xs px-3 py-1 rounded font-medium">
-              Nuevo
-            </span>
-          )}
-          {product.discount > 0 && (
-            <span className="absolute top-3 right-3 bg-red-600 text-white text-xs px-3 py-1 rounded font-medium">
-              -{product.discount}%
-            </span>
-          )}
-        </div>
+      <div className="mt-3 grid gap-6 md:mt-6 md:grid-cols-2 md:gap-10 lg:gap-14">
+        {/* En escritorio la foto se queda a la vista mientras se lee una
+            descripción larga (top-24 = debajo del encabezado fijo). */}
+        <FotoConRespaldo
+          src={product.image}
+          alt={product.name}
+          icono={Package}
+          tono="marca"
+          loading="eager"
+          className="aspect-square w-full rounded-tarjeta border border-borde md:sticky md:top-24 md:self-start"
+        />
 
-        <div>
-          <p className="text-sm text-gray-400 uppercase tracking-wider mb-2">
-            {product.category}
-          </p>
-          <h1 className="text-2xl md:text-3xl font-bold mb-4">{product.name}</h1>
+        <div className="min-w-0">
+          {/* Nombre completo (en la tarjeta va cortado a 2 líneas) */}
+          <h1 className="font-display text-2xl font-normal leading-tight text-balance break-words text-tinta md:text-3xl lg:text-4xl">
+            {product.name}
+          </h1>
 
-          <div className="flex items-baseline gap-3 mb-6">
-            <span className="text-3xl font-bold">{formatPrice(product.price)}</span>
-            {product.oldPrice && (
-              <span className="text-lg text-gray-400 line-through">
-                {formatPrice(product.oldPrice)}
-              </span>
+          {precio && (
+            <p className="mt-3 text-2xl font-semibold tabular-nums text-tinta md:text-3xl">{precio}</p>
+          )}
+
+          {/* Datos del producto. Antes la categoría era una etiqueta en
+              MAYÚSCULAS encima del título (eyebrow); ahora es un dato más. */}
+          {(categoria || conStock) && (
+            <dl className="mt-5 grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-base">
+              {categoria && (
+                <>
+                  <dt className="text-tinta-suave">Categoría</dt>
+                  <dd className="min-w-0 break-words text-tinta">{categoria}</dd>
+                </>
+              )}
+              {conStock && (
+                <>
+                  <dt className="text-tinta-suave">Disponibilidad</dt>
+                  <dd className="flex items-center gap-2 text-tinta">
+                    {agotado ? (
+                      <PackageX className="h-5 w-5 shrink-0 text-error" aria-hidden="true" />
+                    ) : (
+                      <CircleCheck className="h-5 w-5 shrink-0 text-exito" aria-hidden="true" />
+                    )}
+                    {agotado ? "Agotado" : textoDisponible(product.stock)}
+                  </dd>
+                </>
+              )}
+            </dl>
+          )}
+
+          <div className="mt-6">
+            {agotado ? (
+              // Desactivado de verdad (no solo gris): el texto dice por qué.
+              <button
+                type="button"
+                disabled
+                className="inline-flex min-h-12 w-full cursor-not-allowed items-center justify-center gap-2 rounded-control border border-borde bg-papel px-6 text-base font-semibold text-tinta-suave sm:w-auto"
+              >
+                <PackageX className="h-5 w-5 shrink-0" aria-hidden="true" />
+                Agotado
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={handleAdd}
+                className="presionable inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-control bg-marca px-6 text-base font-semibold text-superficie hover:bg-marca-hover sm:w-auto"
+              >
+                <ShoppingCart className="h-5 w-5 shrink-0" aria-hidden="true" />
+                Agregar al carrito
+              </button>
             )}
           </div>
 
-          <p className="text-gray-600 leading-relaxed mb-6">{product.description}</p>
-
-          <div className="flex items-center gap-2 text-sm text-gray-500 mb-6">
-            <Check className="w-4 h-4 text-green-600" />
-            <span>
-              {product.stock > 0
-                ? `${product.stock} unidades disponibles`
-                : "Agotado"}
-            </span>
-          </div>
-
-          <button
-            onClick={(e) => {
-              addRipple(e);
-              addItem(product);
-              showAddToCartToast(product.name);
-            }}
-            disabled={product.stock === 0}
-            className="btn-hover btn-ripple w-full md:w-auto flex items-center justify-center gap-2 bg-black text-white px-8 py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
-          >
-            <ShoppingCart className="w-5 h-5" />
-            Agregar al carrito
-          </button>
+          {/* whitespace-pre-line respeta los saltos de línea que escribió quien
+              cargó el producto. Si viene vacía, no se dibuja la sección. */}
+          {descripcion && (
+            <section aria-labelledby="titulo-descripcion" className="mt-8 border-t border-borde pt-6">
+              <h2 id="titulo-descripcion" className="text-lg font-semibold text-tinta">
+                Descripción
+              </h2>
+              <p className="mt-3 max-w-prose whitespace-pre-line break-words text-base leading-relaxed text-tinta">
+                {descripcion}
+              </p>
+            </section>
+          )}
         </div>
       </div>
     </main>

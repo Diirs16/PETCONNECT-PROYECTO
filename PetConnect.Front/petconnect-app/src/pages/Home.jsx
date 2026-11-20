@@ -1,12 +1,40 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, Heart, Truck, Shield } from "lucide-react";
+import { HeartHandshake, PawPrint, ShieldCheck, ShoppingBag, Store } from "lucide-react";
 import ProductCard from "../components/ProductCard";
 import EstadoCarga from "../components/EstadoCarga";
 import { getProductos } from "../services/api";
-import { useScrollReveal } from "../assets/js/useScrollReveal";
 // Cuántos productos de la API se muestran en "Productos destacados".
 import { POR_PAGINA_DESTACADOS } from "../utils/paginacion";
+
+// Fase 1 del rediseño (D2): solo beneficios que la web ya cumple hoy.
+// Antes prometía "envío en 24-48 h" y "garantía de devolución", que no existen (#2).
+const beneficios = [
+  {
+    Icono: HeartHandshake,
+    color: "text-acento",
+    titulo: "Adopción en línea",
+    texto:
+      "Conoce a cada mascota y envía tu solicitud desde su ficha. Te respondemos al correo de tu cuenta.",
+  },
+  {
+    Icono: ShoppingBag,
+    color: "text-marca",
+    titulo: "Lo que necesita, en un catálogo",
+    texto: "Alimento, accesorios y cuidado para tu mascota, en un solo lugar.",
+  },
+  {
+    Icono: ShieldCheck,
+    color: "text-marca",
+    titulo: "Tus datos, protegidos",
+    texto: "Verificamos tu correo al entrar y tratamos tus datos según la Ley 1581 de 2012.",
+  },
+];
+
+// Receta única de botón grande (adopción en terracota, catálogo en turquesa:
+// mismo tamaño y mismo peso). "presionable" está en index.css.
+const botonGrande =
+  "presionable inline-flex min-h-12 items-center justify-center gap-2 rounded-control px-5 text-base font-semibold text-superficie no-underline";
 
 export default function Home() {
   // 3.3 (A-23): antes Home SIEMPRE usaba productos inventados de
@@ -15,8 +43,6 @@ export default function Home() {
   const [products, setProducts] = useState([]);
   const [estado, setEstado] = useState("cargando"); // "cargando" | "error" | "listo"
   const [intento, setIntento] = useState(0); // al sumar 1, se vuelve a pedir la lista
-
-  useScrollReveal();
 
   useEffect(() => {
     let vigente = true; // evita actualizar la página si el usuario ya se fue
@@ -42,120 +68,107 @@ export default function Home() {
   }
 
   return (
-    <main className="page-enter">
-      {/* Hero */}
-      <section className="bg-gray-50 border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 py-16 md:py-24 text-center">
-          <h1 className="hero-title text-3xl md:text-5xl font-bold text-black leading-tight mb-4">
-            Todo para tu mascota en un solo lugar
-          </h1>
-          <p className="hero-subtitle text-gray-500 text-lg mb-8 max-w-2xl mx-auto">
-            Encuentra los mejores productos para el cuidado de tu mascota y dale
-            un hogar a quien más lo necesita con nuestro programa de adopción.
-          </p>
-          <div className="hero-buttons flex flex-col sm:flex-row gap-3 justify-center">
-            <Link
-              to="/catalogo"
-              className="btn-hover btn-ripple inline-flex items-center justify-center gap-2 bg-black text-white px-6 py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors no-underline"
-            >
-              Ver catálogo
-              <ArrowRight className="w-4 h-4" />
-            </Link>
-            <Link
-              to="/adopcion"
-              className="btn-hover inline-flex items-center justify-center gap-2 border-2 border-black text-black px-6 py-3 rounded-lg font-medium hover:bg-black hover:text-white transition-colors no-underline"
-            >
-              Adoptar mascota
-              <Heart className="w-4 h-4" />
-            </Link>
-          </div>
-        </div>
-      </section>
+    <main>
+      {/* React 19 sube <title> y <meta> al <head> mientras el Home está abierto (§3.6) */}
+      <title>PetConnect · Adopción responsable y productos para mascotas</title>
+      <meta
+        name="description"
+        content="Conoce mascotas que buscan hogar en el Quindío y productos para su cuidado."
+      />
 
-      {/* Features */}
-      <section className="max-w-7xl mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="scroll-reveal stagger-1 card-hover flex items-start gap-4 p-5 border border-gray-200 rounded-lg">
-            <Truck className="w-8 h-8 text-black flex-shrink-0" />
-            <div>
-              <h3 className="font-semibold text-sm mb-1">Envío rápido</h3>
-              <p className="text-sm text-gray-500">
-                Entrega en 24-48 horas en las principales ciudades.
-              </p>
-            </div>
-          </div>
-          <div className="scroll-reveal stagger-2 card-hover flex items-start gap-4 p-5 border border-gray-200 rounded-lg">
-            <Shield className="w-8 h-8 text-black flex-shrink-0" />
-            <div>
-              <h3 className="font-semibold text-sm mb-1">Compra segura</h3>
-              <p className="text-sm text-gray-500">
-                Pagos protegidos y garantía de devolución.
-              </p>
-            </div>
-          </div>
-          <div className="scroll-reveal stagger-3 card-hover flex items-start gap-4 p-5 border border-gray-200 rounded-lg">
-            <Heart className="w-8 h-8 text-black flex-shrink-0" />
-            <div>
-              <h3 className="font-semibold text-sm mb-1">Adopción responsable</h3>
-              <p className="text-sm text-gray-500">
-                Conectamos mascotas con familias amorosas.
-              </p>
-            </div>
+      {/* Portada: a la izquierda el título y las dos puertas; a la derecha (o
+          debajo, en celular) lo que la web ya ofrece. */}
+      <section className="mx-auto grid max-w-7xl gap-12 px-4 pb-12 pt-10 md:px-6 md:pb-16 md:pt-16 lg:grid-cols-12 lg:gap-10">
+        <div className="lg:col-span-7">
+          {/* Corte fijo después de la coma: dos líneas en celular y escritorio */}
+          <h1 className="font-display text-4xl font-normal leading-[1.08] tracking-tight text-tinta md:text-5xl lg:text-6xl">
+            Cuida y adopta,{" "}
+            <span className="block">en un solo lugar</span>
+          </h1>
+          <p className="mt-5 max-w-[60ch] text-base text-pretty text-tinta-suave md:text-lg">
+            Conoce a las mascotas que buscan familia en el Quindío y encuentra
+            alimento, accesorios y cuidado para la tuya.
+          </p>
+          <div className="mt-8 grid gap-3 sm:max-w-xl sm:grid-cols-2">
+            <Link to="/adopcion" className={`${botonGrande} bg-acento hover:bg-acento-oscuro`}>
+              <PawPrint className="h-5 w-5" aria-hidden="true" />
+              Ver mascotas en adopción
+            </Link>
+            <Link to="/catalogo" className={`${botonGrande} bg-marca hover:bg-marca-hover`}>
+              <Store className="h-5 w-5" aria-hidden="true" />
+              Explorar catálogo
+            </Link>
           </div>
         </div>
+
+        <ul className="divide-y divide-borde border-y border-borde lg:col-span-5 lg:self-end lg:border-y-0 lg:border-l lg:pl-10">
+          {beneficios.map(({ Icono, color, titulo, texto }) => (
+            <li key={titulo} className="flex gap-4 py-5 lg:first:pt-0 lg:last:pb-0">
+              <Icono className={`mt-0.5 h-6 w-6 shrink-0 ${color}`} aria-hidden="true" />
+              <div>
+                <h2 className="text-lg font-semibold text-tinta">{titulo}</h2>
+                <p className="mt-1 text-base text-pretty text-tinta-suave">{texto}</p>
+              </div>
+            </li>
+          ))}
+        </ul>
       </section>
 
       {/* Productos destacados (de la API; 3.3) */}
-      <section className="max-w-7xl mx-auto px-4 py-10">
-        <div className="scroll-reveal flex items-center justify-between mb-6">
-          <h2 className="text-xl md:text-2xl font-bold">Productos destacados</h2>
-          <Link
-            to="/catalogo"
-            className="link-animate text-sm text-gray-500 hover:text-black no-underline flex items-center gap-1"
-          >
-            Ver todo <ArrowRight className="w-4 h-4" />
-          </Link>
-        </div>
-        {estado === "cargando" && <EstadoCarga tipo="cargando" titulo="Cargando productos…" />}
-        {estado === "error" && (
-          <EstadoCarga
-            tipo="error"
-            titulo="No pudimos cargar los productos"
-            onReintentar={reintentar}
-          >
-            Revisa tu conexión o inténtalo de nuevo en unos minutos.
-          </EstadoCarga>
-        )}
-        {estado === "listo" && products.length === 0 && (
-          <EstadoCarga tipo="vacio" titulo="Todavía no hay productos en el catálogo" />
-        )}
-        {estado === "listo" && products.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {products.map((product, i) => (
-              <div key={product.id} className={`scroll-reveal stagger-${i + 1}`}>
-                <ProductCard product={product} />
-              </div>
-            ))}
+      <section className="border-t border-borde">
+        <div className="mx-auto max-w-7xl px-4 pb-12 pt-10 md:px-6 md:pb-20 md:pt-14">
+          <div className="mb-6 flex flex-wrap items-end justify-between gap-x-4 gap-y-2">
+            <h2 className="font-display text-2xl font-normal text-balance text-tinta md:text-3xl">
+              Productos destacados
+            </h2>
+            <Link
+              to="/catalogo"
+              className="inline-flex min-h-11 items-center text-base font-semibold text-marca underline-offset-4 hover:underline"
+            >
+              Ver todo el catálogo
+            </Link>
           </div>
-        )}
+          {estado === "cargando" && <EstadoCarga tipo="cargando" titulo="Cargando productos…" />}
+          {estado === "error" && (
+            <EstadoCarga
+              tipo="error"
+              titulo="No pudimos cargar los productos"
+              onReintentar={reintentar}
+            >
+              Revisa tu conexión o inténtalo de nuevo en unos minutos.
+            </EstadoCarga>
+          )}
+          {estado === "listo" && products.length === 0 && (
+            <EstadoCarga tipo="vacio" titulo="Todavía no hay productos en el catálogo" />
+          )}
+          {estado === "listo" && products.length > 0 && (
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {products.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          )}
+        </div>
       </section>
 
-      {/* CTA Adoption */}
-      <section className="max-w-7xl mx-auto px-4 py-10 mb-8">
-        <div className="scroll-reveal-scale bg-gray-50 border border-gray-200 rounded-xl p-8 md:p-12 text-center">
-          <h2 className="text-2xl md:text-3xl font-bold mb-3">
-            Dale un hogar a quien más lo necesita
-          </h2>
-          <p className="text-gray-500 mb-6 max-w-lg mx-auto">
-            Conoce las mascotas disponibles para adopción y cambia una vida
-            para siempre.
-          </p>
+      {/* Adopción: mismo peso que la tienda, con su color propio */}
+      <section className="bg-acento-claro">
+        <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-12 md:flex-row md:items-center md:justify-between md:gap-10 md:px-6 md:py-16">
+          <div className="max-w-xl">
+            <h2 className="font-display text-2xl font-normal text-balance text-tinta md:text-3xl">
+              Dale un hogar a quien lo necesita
+            </h2>
+            <p className="mt-3 text-base text-pretty text-tinta-suave">
+              Cada mascota tiene su ficha con su historia. Si una encaja contigo,
+              envía la solicitud desde ahí.
+            </p>
+          </div>
           <Link
             to="/adopcion"
-            className="btn-hover btn-ripple inline-flex items-center gap-2 bg-black text-white px-6 py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors no-underline"
+            className={`${botonGrande} shrink-0 bg-acento hover:bg-acento-oscuro`}
           >
+            <PawPrint className="h-5 w-5" aria-hidden="true" />
             Ver mascotas en adopción
-            <Heart className="w-4 h-4" />
           </Link>
         </div>
       </section>
