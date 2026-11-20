@@ -875,7 +875,9 @@ comunidad (RF07), diario de salud (RF08), GPS (RF10) y compra real (RF11). **El 
 - [ ] 13.1 Con `ecc:react-testing`: pruebas de `CartModal` (Escape, foco, tope de stock), `Header` (nombre con tildes) y `ProductCard` (agotado). Necesita instalar Vitest + Testing Library: se decide al llegar
 
 ### Cierre
-- [ ] Unir `rediseno-front` a `main` **con tu aprobación**; preguntar antes de `git push`
+- [x] Unir `rediseno-front` a `main` **con tu aprobación**; preguntar antes de `git push`
+- *Hecho el 19/11/2026* con `git merge --no-ff` (commit `c564b6d`), después de lint 0 problemas, build y 149 pruebas.
+  La Fase 13 (opcional) queda sin hacer. `git push` sigue pendiente de tu confirmación.
 
 ---
 
